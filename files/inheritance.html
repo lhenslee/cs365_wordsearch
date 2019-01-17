@@ -1,0 +1,295 @@
+<center>
+<h1> Inheritance Issues </h1>
+</center>
+<p>
+<hr>
+<p>
+<pre>
+I. Multiple Inheritance
+
+    A. What it is: Inheriting from multiple classes
+
+    B. Why use it
+
+        1. You want to provide more than one view of an object
+
+	    Example: A software package for serializing objects to
+              byte streams so they can be stored as binary objects
+              requires a view that converts an object to a byte stream.
+              In contrast, a sorting algorithm requires a view that
+              allows it to compare two objects. 
+
+              In C++ this would be written as:
+
+              class Employee : public Serializable, public Comparable {
+	         ...
+	      };
+
+	      Employee worker = new Employee();
+	      Serializable *binaryObj = worker;
+	      Comparable *comparisonObj = worker;
+
+	2. You want to inherit implementation from more than one class
+
+	    Example: We want our administrative computing system to keep
+	      all students of the same year (freshmen, sophomores, juniors,
+	      seniors, etc) on some list. We may then want to inherit
+	      both from a base class for people at the university, such
+	      as person, and from a base class for linked lists.
+
+    C. Problems with multiple inheritance
+
+        1. What to do with duplicated names
+
+	    a. duplicated instance variables can be referenced by prefixing
+	       the variable name with the class name
+
+	       Example:
+
+	       class fruit {
+	       public:
+	         int calories;
+		 void debug_print() { printf("fruit cals = %d\n", calories); }
+	       };
+
+	       class veggie {
+	       public:
+	         int calories;
+		 void debug_print() { printf("veggie cals = %d\n", calories); }
+	       };
+
+	       class food : public fruit, public veggie {
+	       public:
+	         food(int fcals, int vcals) {
+		     fruit::calories = fcals;
+		     veggie::calories = vcals;
+	         }
+		 void print_fields() {
+		     printf("fruit calories = %d\n", fruit::calories);
+		     printf("veggie calories = %d\n", veggie::calories);
+		 }
+		 void debug_print() {
+		     fruit::debug_print();
+		     veggie::debug_print();
+		 }
+	       };
+
+	    b. duplicated method names can also be referenced by prefixing
+	       the method name with the class name
+
+	       i. What happens when an outside function tries to call
+	          a duplicated method name? -- The derived class must
+		  provide its own definition of the method
+
+		  Example: see the above definition of debug_print
+			in food
+
+	      ii. The derived class can provide access to the duplicated
+	          methods individually by providing new methods
+
+		  Example:
+
+		     void fruit_debug () { fruit::debug_print(); }
+		     void veggie_debug () { veggie::debug_print(); }
+
+        2. Problems with multiple inheritance from the same base class: Should
+	   an instance of the derived class contain one or two copies of
+	   the base class?
+
+	   Example:  class student_prof : public student, public professor {
+	              ...
+		     };
+
+           Desired Inheritance: probably want a student who is also a
+	      professor to have only one instance of the person object
+	      (one university id, name, etc) but two instances of the
+	      list object, since you may want to link the professor to
+	      a non-matriculated student list and to some faculty list
+
+	   Inheritance Hierarchy:     list    person      list
+                                        \      /  \        /
+					 \    /    \      /
+					  \  /      \    /
+					student   professor
+					   \          /
+					    \        /
+					     \      /
+					   student_prof
+
+           a. Two types of inheritance
+
+	       i. replicated inheritance: inherit separate copies from each
+	          chain of the inheritance hierarchy (e.g., the inheritance
+		  of the list object)
+
+	      ii. shared inheritance: inherit a single copy from both branches
+	          of the tree (e.g., the inheritance of the person object)
+
+	   b. Replicated inheritance is the default in C++
+
+	   c. Shared inheritance can be obtained by specifying that a
+	       base class is virtual
+
+	       class student : public virtual person, public list { ... }
+	       class professor : public virtual person, public list { ... }
+
+               i. the place to declare the base class virtual is
+                  the direct descendents of the superclass that forms the
+                  apex of the diamond (in this case Person)
+              ii. in this example person will be shared while the list
+                  class will be replicated
+
+	   d. Here is the complete example. Note that the constructor
+		for StudentProfessor must directly call the constructor
+		for the shared object, Person, as well as calling constructors
+		for the immediate superclasses.
+
+		class Person {
+		   protected:
+		      string name;
+		      int age;
+		   public:
+		      Person(string n, int a) : name(n), age(a) {}
+		};
+
+		class Student : public virtual Person {
+		   protected:
+		      double gpa;
+		   public:
+		      Student(string n, int a, double g) 
+			 : Person(n, a), gpa(g) {}
+		};
+
+		class Professor : public virtual Person {
+		   protected:
+		      string rank;
+		   public:
+		      Professor(string n, int a, string r) 
+			 : Person(n, a), rank(r) {}
+		};
+
+		class StudentProfessor : public Student, public Professor {
+		   public:
+		      StudentProfessor(string n, int a, double g, string r) 
+			 : Person(n, a), Professor(n, a, r), Student(n, a, g) {}
+		      void printAttributes() {
+			 cout << "name = " << name << endl;
+			 cout << "age = " << age << endl;
+			 cout << "gpa = " << gpa << endl;
+			 cout << "rank = " << rank << endl;
+		      }
+		};
+
+		int main() {
+		   StudentProfessor s("Brad", 53, 4.0, "Professor");
+		   s.printAttributes();
+		}
+
+        3. Multiple inheritance also introduces implementation problems
+	   for the compiler which are not discussed in this class
+
+II. Mix-In Inheritance (Composition Versus Inheritance): Inheritance from
+    one "real" base class and an arbitrary number of interfaces
+
+    A. Ways to do it
+
+        1. C++: Make the interfaces be abstract base classes with every
+	    method in the base class declared as pure virtual.
+
+        2. Java: Use interfaces 
+
+    B. But suppose I want to
+
+        1) inherit behavior from multiple classes, or
+	2) inherit an object's behavior but not its interface
+
+        1. Use composition: Make your class contain an object of the type
+	    whose behavior you want to inherit
+
+	    a. Have your methods call the corresponding methods in the
+	       composed object
+
+	       Example: class Rectangle {
+	                    public void setWidth(int w) { ... }
+			    public void setHeight(int h) { ... }
+			    public int getArea() { ... }
+			    public int getWidth() { ... }
+			    public int getHeight() { ... }
+			    public void draw() { ... }
+			    public boolean pointInObject(int x, int y) { ... }
+
+			    int width;
+			    int height;
+			}
+
+			class Square {
+			  Rectangle mySquare;
+
+			  public int getArea() { return mySquare.getArea(); }
+			  public void draw() { mySquare.draw(); }
+			  public boolean pointInObject(int x, int y) {
+			      return mySquare.pointInObject(x, y); }
+			  
+			  pubic void setSize(int s) { 
+			      mySquare.setWidth(s);
+			      mySquare.setHeight(s);
+			  }
+			  int getSize() { return mySquare.getWidth(); }
+			}
+
+   	2. Composition works if you can get by with using the services that
+	   an object provides, but sometimes you actually need access to its
+	   internal implementation. 
+
+	   a. Example: There is no way to store a List object in a student
+	      class and achieve a threading of students. The only way to
+	      do it is to inherit a List's implementation so that your program
+	      can access the next fields.
+
+	      Note: A better way to thread the students is to have a list
+	         object completely outside the student class that holds the
+		 students. That way a student can be on more than one list.
+		 This example illustrates that often a small change to the
+		 design can eliminate the need to inherit.
+
+           b. In C++ one can use access modifiers before the base class to
+	      control whether interface or implementation is inherited, or
+	      both
+
+	    a. class derived : public base { ... } -- inherits both the
+	        interface and the implementation of the base class
+
+	    b. class derived : protected base { ... } -- inherits the
+	        implementation but not the interface of the base class
+
+		i. all public methods in the base class become protected
+		   methods in the derived class
+
+	       ii. the <b>using</b> keyword can re-declare a method to be
+	           public
+
+	       Example: class Rectangle {
+	                  public:
+			    void setWidth(int w);
+			    void setHeight(int h);
+			    int getArea();
+			    int getWidth();
+			    int getHeight();
+			    void draw();
+			    bool pointInObject(int x, int y);
+			  protected:
+			    int width;
+			    int height;
+			};
+
+			class Square : protected Rectangle {
+			  public:
+			    using Rectangle::getArea;
+			    using Rectangle::draw;
+			    using Rectangle::pointInObject;
+			    
+			    void setSize(int s) { width = s; height = s; }
+			    int getSize() { return width; }
+			};
+
+</pre>

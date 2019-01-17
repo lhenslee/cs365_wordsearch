@@ -1,0 +1,205 @@
+<center><h1> JAR Files </h1></center>
+<p>
+A JAR file is similar to a tar file in that it constitutes an archive of
+Java class files and source files. JAR files are created with the <b>jar</b> command and the
+jar command takes many of the same arguments as tar. The jar command
+automatically performs compression on your class files using the ZIP file
+format. 
+<p>
+You can use the jar command to package all the class files for your application
+into a single file. If you also tell the jar command the main class to access
+within the jar file, then you can treat the jar file as a pseudo-object file.
+Finally, if you want, you can also include your source files in the jar file, although
+normally you would not do so. In this course we want you to submit both your class and
+source files, so you will be including the source files in your jar file.
+<p>
+The following table, which I copied from Sun's tutorial website on the jar
+command, shows the most common uses of the jar command:
+<p>
+<table border=1 cellpadding=5>
+<tr>
+<th>Operation</th><th>Command</th>
+</tr>
+<tr>
+<td>To create a JAR file</td><td> <tt>jar cf <i>jar-file input-file(s)</i></tt></td>
+</tr>
+
+<tr>
+<td>To view the contents of a JAR file</td>
+<td> <tt>jar tf <i>jar-file</i></tt></td>
+</tr>
+
+<tr>
+<td>To extract the contents of a JAR file</td>
+<td> <tt>jar xf <i>jar-file</i></tt></td>
+</tr>
+
+<tr>
+<td>To run an application packaged as a JAR file (requires the <a href="../manifest/appman.html"><tt>Main-class</tt></a> manifest header)</td>
+<td valign=middle><pre>java -jar <i>app.jar</i></pre></td>
+</tr>
+
+</table>
+<p>
+<h2> Specifying an Application's Entry Point </h2>
+<p>
+You can tell java how to find the entry point within your jar file by creating
+a <b>manifest</b> file. A manifest file can have any name you choose although
+<tt>manifest.txt</tt> is a commonly chosen one.
+A manifest file should contain the following
+single statement:
+<p>
+<b>Main-Class</b>: classname
+<p>
+<b>Main-Class</b> is a required keyword and <i>classname</i> is the name of
+the class that contains your application's <tt>main</tt> method. 
+<p>
+Here is an example manifest file for an application whose main class
+is <tt>SalaryList</tt>:
+<p>
+<tt>Main-Class: SalaryList</tt>
+<p>
+If you are using packages, then you need to fully qualify the class name. 
+Here is an example manifest file for an application whose main class is
+named LexDriver and which is contained in a package named formula:
+<p>
+<tt>Main-Class: formula.LexDriver</tt>
+<p>
+<p>
+<h3> Creating a Jar File that Contains a Manifest </h3>
+<p>
+When you create your jar file, you can include <i>m</i> as a command
+line option. This option causes java to use the file specified after the 
+<i>m</i> flag as the manifest file. For example, if the above file is named
+<tt>manifest.txt</tt> and your files are in a directory named <tt>formula</tt>,
+you could create your jar file with the following command:
+<p>
+<tt> jar cmf manifest.txt formula.jar formula </tt>
+<p>
+Note that you can specify all of your flags before specifying the files. The
+files should be specified in the same order as the flags. The name of the jar
+file does <i>not</i> have to be the same as your main class.
+<p>
+<h3> A Simpler Way to Specify the Application Entry Point </h3>
+<p>
+The jar tool has a <tt>-e</tt> flag that allows you to specify the
+application's entry point without creating a manifest file. For example
+the command:
+<pre>
+jar cfe Salary.jar SalaryList *.class
+</pre>
+will automatically create a manifest file that contains SalaryList as
+the application entry point.
+<p>
+<h3> Executing a Jar File with an Application Entry Point </h3>
+<p>
+In order to execute a jar file that has an entry point specified, invoke
+java with the -jar option and the jar file's name. For example:
+<p>
+<tt> java -jar formula.jar </tt>
+<p>
+<h2> Some Example Jar Creation Commands </h2>
+<p>
+Here are some sample commands for creating jar files. All of the example commands assume that
+the manifest file is named <tt>manifest.txt</tt>. If you choose to use a different name for
+the manifest file, then change <tt>manifest.txt</tt> to whatever file name you choose.
+<p>
+<ol>
+<li> You are in the directory that contains the .class files, and you only want to include the
+	.class files.
+<pre>
+jar cmf manifest.txt foo.jar *.class
+</pre>
+<li> You are in the directory that contains the .class files, and you want to include both the
+	.java and the .class files.
+<pre>
+jar cmf manifest.txt foo.jar *.class *.java
+</pre>
+<li> You are in the directory that contains the .class files, and you only want to include the
+	.class files associated with the class <tt>foo</tt>.
+<pre>
+jar cmf manifest.txt foo.jar foo*.class
+</pre>
+	This command will scoop up both the foo.class file and any nested classes declared in
+	the foo class.
+<p>
+<li> Your files are in the hw1 directory and you are in hw1's parent directory. You want to include both the .class files
+	and .java files associated with the class <tt>foo</tt>:
+<pre>
+jar cmf hw1/manifest.txt foo.jar hw1/foo*.class hw1/foo.java
+</pre>
+<li> Your files are in a package named silhouette and you are in silhouette's parent directory. You
+	want to include both the .class and the .java files for silhouette. <b>If you are jarring up a package, then
+	make sure that you are in the parent directory, since it is vital that the entire directory
+	tree for the package end up in the jar file</b>:
+<pre>
+jar cmf silhouette/manifest.txt silhouette.jar silhouette
+</pre>
+</ol>
+<p>
+<h2> Warnings about Using Jar and Manifest Files </h2>
+<p>
+<ol>
+<li> <b>The
+manifest file must end with a new line or carriage return. The last line will
+not be parsed properly if it does not end with a new line or carriage
+return.</b>
+<p>
+<li> Normally you will jar up a directory tree and the directory tree will
+     contain all the files needed for your application. However, should you
+     wish to include files from other packages, then
+     you can use the -C flag to change to these packages' parent directory and then grab the
+     packages directoriess. For example, suppose that you are jarring up the foo.class, and
+     that foo creates an instance of play.Hello, which can be found in 
+     /Users/bvz/cs102/play/Hello.class. If you try to type:
+<pre>
+jar cmf manifest.txt foo.jar foo.class /Users/bvz/cs102/play/Hello.class
+</pre>
+     then your jar file won't work properly, because Hello.class will get
+     included in your jar file as /Users/bvz/cs102/play/Hello.class. If instead
+     you try to type:
+<pre>
+jar cmf manifest.txt foo.jar foo.class /Users/bvz/cs102/play/
+</pre>
+     then the play directory will be represented in your jar file as /Users/bvz/cs102/play,
+     rather than as play and java will not be able to locate the Hello.class file.
+     Instead you should type:
+<pre>
+jar cmf manifest.txt foo.jar foo.class -C /Users/bvz/cs102/ play/Hello.class
+</pre>
+     The -C flag causes the jar command to "cd" to the /Users/bvz/cs102/
+     directory and then grab the play/Hello.class (it will create a directory for play
+     in your jar file and store Hello.class in the play directory). The jar file will now contain
+     foo.class and play/Hello.class, which is what you want.
+<p>
+<li> <b>If you use the -jar option, the java interpreter expects all user 
+     classes to be bundled in 
+     either the jar file or in jar files that are referenced by the manifest 
+     file's Class-Path parameter.</b> (The specific statement can be found
+     in the documentation for java's -jar flag and reads 
+     "When you use this option, the JAR file is the source of all user 
+     classes, and other user class path settings are ignored.")
+     The Class-Path parameter may only contain
+     references to jar files and the jar files must be in directories local
+     to the machine on which the jar file is being run, not in the jar file
+     itself. The Class-Path parameter may not specify directories in either
+     the jar file itself, or on the local machine that contain class files.
+     If you want classes in your jar file to access external class files 
+     that simply exist in a directory, such as for example,
+     java_cup/runtime classes, 
+     then you are out of luck and cannot use the -jar option with java. 
+<p>
+<li> While you are allowed to embed .jar files within an outer .jar file,
+  you will not be able to load this embedded .jar file into your program
+  without writing custom code. The Class-Path parameter described in the
+  previous bullet point cannot be used to load embedded .jar files into
+  your program. I personally have never seen the custom code required to
+  load an embedded jar file into your program but you could probably google
+  it.
+</ol>
+<p>
+<hr>
+<h2> Where to Find More Information about Jar Files </h2>
+<p>
+You can find more information about jar files and manifest files 
+<a href="http://docs.oracle.com/javase/tutorial/deployment/jar/">here</a>.

@@ -1,0 +1,350 @@
+<head>
+<style>
+body { background-color: #DDFFDD; }
+div.code { text-align:center; }
+table.code {
+  border:5px ridge gray;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+}
+table.code td { padding:3px; }
+pre {
+  border: dashed 1px black;
+  padding: 10px;
+  background-color: rgb(240, 240, 240);
+}
+ol { list-style-type: upper-roman; }
+ol ol { list-style-type: upper-alpha; }
+ol ol ol { list-style-type: decimal; }
+ol ol ol ol { list-style-type: lower-alpha; }
+ol ol ol ol ol { list-style-type: lower-roman; }
+ol ol ol ol ol ol { list-style-type: decimal; }
+ol ol ol ol ol ol ol { list-style-type: lower-alpha; }
+ol ol ol ol ol ol ol ol { list-style-type: lower-roman; }
+</style>
+</head
+<center>
+<h1>Other Functional Language Issues</h1>
+</center>
+<ol>
+<li> Evaluation Issues:
+  <ol>
+    <li> Evaluation Order: Because many functional programs do not have side
+  effects, the order in which functional arguments are evaluated should be
+  immaterial. Therefore, many functional languages allow their compilers
+  to evaluate functional arguments in any order they prefer, or even in
+  parallel. If you look at our own scheme compiler, it often evaluates its
+  arguments right to left. For example:
+<pre>
+(define add (lambda (x) (+ x 20)))
+(define min (lambda (x y) (if (< x y) x y)))
+
+(trace add)
+
+(min (add 5) (add 20))
+
+[Entering #[compound-procedure 4 add]
+    Args: 20]
+[40
+      <== #[compound-procedure 4 add]
+    Args: 20]
+[Entering #[compound-procedure 4 add]
+    Args: 5]
+[25
+      <== #[compound-procedure 4 add]
+    Args: 5]
+;Value: 25
+</pre>
+      <ol>
+	<li> Scheme Evaluation Order
+	  <ol>
+	    <li> Functions: Any order--determined by the compiler
+	    <li> Special Forms (e.g., cond, if, loops, or/and): Have a pre-specified
+	         evaluation order. For example, an if function always 
+	         evaluates the conditional expression first, and then either
+	         the if or else expression
+          </ol>
+      </ol>
+    <p>
+   <li> Applicative-Order versus Normal-Order Evaluation
+     <ol>
+       <li> Definitions
+	 <ol>
+	   <li> Applicative-Order Evaluation: evaluates function arguments before
+	     passing them to a function (Scheme functions use applicative-order
+	     evaluation)
+	   <li> Normal-Order Evaluation: passes arguments unevaluated to
+	     a function (Scheme special forms use normal-order evaluation)
+	 </ol>
+       <p>
+       <li> Illustrations of the difference between the two
+	 <ol>
+	   <li> The obvious difference is short-circuit evaluation in
+	     boolean operators. Applicative-order evaluation will evaluate
+	     all arguments before evaluating the boolean operator, which
+	     could cause unwanted effects if the first condition was guarding
+	     the second, as in:
+<pre>
+(and (not (= y 0)) (/ x y))
+</pre>
+             Normal-order evaluation will allow us to short-circuit the 
+             evaluation as soon as one of the conditional expressions causes
+             the outcome to become known
+          <p>
+          <li> Consider the following function and function call:
+<pre>
+(define double (lambda (x) (+ x x )))
+
+(double (* 3 4))
+</pre>
+             Under applicative order evaluation we have:
+<pre>
+(double (* 3 4))
+==> (double 12)
+==> (+ 12 12)
+==> 24
+</pre>
+             Under normal order evaluation we have:
+<pre>
+(double (* 3 4))
+==> (+ (* 3 4) (* 3 4))
+==> (+ 12 (* 3 4))
+==> (+ 12 12)
+==> 24
+</pre>
+             and hence we perform twice the work.
+      </ol>
+    </ol>
+      <p>
+  <li> Strictness and Lazy Evaluation: As shown above, evaluation order can have 
+     an effect on both program correctness and execution speed. In the first
+     example, applicative-order evaluation could cause a division by zero error
+     whereas normal-order evaluation would allow the program to terminate
+     normally. In the second example, normal order evaluation did twice the
+     work of applicative-order evaluation. However, in the first example, 
+     normal order evaluation may do less work than applicative order 
+     evaluation. 
+    <p>
+    <ol>
+      <li> Strictness
+	<ol>
+	  <li> A function is <i>strict</i> if it is undefined (fails to
+	    terminate or encounters an error) when any of its arguments is
+	    undefined. Such a function can safely evaluate all its arguments, so
+	    its result will not depend on evaluation order. A strict
+	    language may safely use applicative order evaluation.
+          <li> A function is <i>non-strict</i> if it is sometimes defined, even
+	    when one of its arguments is not. A non-strict language must use
+	    normal order evaluation. 
+	  <li> Scheme is strict for functions, but non-strict for special forms
+        </ol>
+      <p>
+      <li> Lazy Evaluation: Lazy evaluation does not evaluate an expression
+	until its value is actually needed. Normal order evaluation is
+	essentially lazy evaluation 
+	  <ol>
+	    <li> Lazy evaluation in Scheme: The <tt>delay</tt> and <tt>force</tt>
+	      constructs allow you to use lazy evaluation in Scheme. For
+	      example:
+<pre>
+(define expr (delay (+ a 10)))
+(define a 15)
+(force expr) ==> 25
+</pre>
+	      <tt>delay</tt> binds an expression to a name and force forces
+	      the evaluation of that expression. Scheme uses the memoization
+	      technique described below to save the value of the evaluated
+	      expression, so if force is called again on it, it simply returns
+	      the cached value. 
+	    <li> Memoization: Memoization is a technique that tags an
+	      expression internally when an expression is first evaluated,
+	      and saves the expression's computed value. Thereafter, references
+	      to the expression use this computed value, rather than
+	      re-evaluating the expression. Memoization can considerably
+	      improve the performance of normal order evaluation. It in fact
+	      brings it within a constant factor of applicative order
+	      evaluation. In the double example shown earlier, the first
+	      evaluation of <tt>(* 3 4)</tt> would be saved, so that the
+	      second evaluation would simply use the value 12, rather than
+	      re-computing the value of the expression.
+	    <li> My definition of lazy evaluation differs from the book's
+	      definition. The book defines lazy evaluation to include 
+	      memoization, whereas I have discussed memoization as an
+	      optimization technique for lazy evaluation
+            <li> One issue with memoization is that it may not work properly
+	      in the presence of side-effects. For example, suppose we lazily
+	      evaluate the expression <tt>(* x y)</tt> and memoize its result.
+	      Before the next reference to this expression is encountered,
+	      the value of <tt>x</tt> is altered. Now the memoize value is
+	      incorrect. 
+	    <li> Spreadsheets use memoization to prevent a spreadsheet from
+	      having to recursively evaluate a tree of expressions each time
+	      a cell's value is requested. They also use an out-of-date
+	      flag to handle the situation where a memoized value becomes
+	      invalid. For example, if the user has
+	      typed the formulas:
+<pre>
+a10 = b10 + c10
+b10 = 3 * b9
+c10 = 8 * c9
+b9 = 5
+c9 = 10
+</pre>
+              then a spreadsheet will cache the results of evaluating
+              the three formulas for a10, b10, and c10. If the user changes
+              the value of a cell, such as b9, then the spreadsheet will
+              use a depth-first traversal to find all formulas that depend
+              directly or indirectly on this changed cell, and mark these
+              formulas and their related cells out-of-date. When a cell's
+              value is requested, the spreadsheet checks the cell's out-of-date
+              flag. If it is set to false, the spreadsheet returns the cached
+              value. If the flag is set to true, the spreadsheet evaluates
+              the cell's formula, caches the result, sets the out-of-date
+              flag to false, and returns the newly computed value. Note that
+              this evaluation could recursively trigger the evaluation of 
+              other out-of-date formulas.
+        </ol>
+     </ol>
+   </ol>
+<p>
+<li> Higher-Order Functions: A function is said to be a <i>higher-order
+  function</i> if it takes a function as an argument, or returns a function
+  as a result. 
+    <p>
+      <ol>
+	<li> Examples
+	  <ol>
+	    <li> C obtains polymorphic sort and search functions by taking
+	      a comparision function as a parameter. 
+	    <li> Map function: The scheme <tt>map</tt> function takes a
+	      function and a sequence of lists, one list for each of the
+	      function's arguments. The lists must all have the same length.
+	      It then applies the function piece-wise to corresponding sets
+	      of elements from the lists and returns a list as the result.
+	      For example:
+<pre>
+(map * '(2 4 6) '(3 5 7)) ==> (6 20 42)
+</pre>
+            <li> Reduce (fold) function: Another common operation is to reduce
+	      a list of values to a single value using a binary operator, such
+	      as '*'. This operation is commonly called <tt>reduce</tt>, although
+	      the book calls it <tt>fold</tt>. Its definition is:
+<pre>
+(define fold (lambda (fct identity-value sequence)
+               (if (null? sequence) 
+                   identity-value   ; e.g., 0 for +, 1 for *
+                   (fct (car sequence) (fold fct identity-value (cdr sequence))))))
+
+(fold * 1 '(2 4 6)) ==> 48
+</pre>
+              fold and map are frequently used in tandem. For example, if
+              I am doing a matrix multiply, each element in the newly computed
+              matrix is the dot product of some row and column. The dot 
+              product is obtained by doing a pair-wise multiplication of the
+              corresponding elements in the row and column, and then summing
+              the resulting products. You can express this operation elegantly
+              using map and fold as follows:
+<pre>
+(fold + 0 (map * row column))
+</pre>
+            <li> Currying an argument: You can "curry" a function by replacing
+	      one of its arguments with a constant value and returning a
+	      function that accepts one fewer arguments. For example:
+<pre>
+(define curried-plus (lambda (a) (lambda (b) (+ a b))))
+
+((curried-plus 3) 4)
+==> ((lambda (b) (+ 3 b)) 4)
+==> 7
+</pre>
+            <li> Interpreting a user-entered expression: Although it is beyond
+	      the scope of this course, there are ways to allow the user to
+	      input a Scheme expression, read this expression as a string,
+	      dump the contents of the string into a lambda form, and then
+	      return the resulting lambda function. This function can now be
+	      evaluated, which achieves the effect of interpreting the user's
+	      input.
+            </ol>
+<p>
+<li> Performance Issues: Because pure functional languages do not have
+  side-effects, naive implementations can suffer from performance issues
+  associated with what has been called the <i>trivial update problem</i>. 
+  These are problems in which a relatively small change must be made to
+  state information, but because side-effects are not allowed, an entirely
+  new structure must be created. This forced re-initialization and garbage
+  collection of discarded memory can significantly slow down a program. Three
+  examples of this problem are:
+  <p>
+    <ol>
+      <li> Initialization of complex structures: It can be difficult to 
+	incrementally put together complex structures that are not lists,
+	such as multi-dimensional arrays, since each incremental addition
+	requires that the arrays be re-created from scratch.
+      <li> Summarization: One often wants to summarize information by providing
+	frequency counts of items, such as frequency counts of words in a file.
+	The natural way to accumulate these frequency counts is with a
+	dictionary (i.e., hash table) and to increment the appropriate item
+	each time it is encountered in the file. However, a purely functional
+	language requires the entire dictionary to be re-created from scratch
+	in this situation.
+      <li> In-place mutation: Many programs do in-place mutations to data
+	elements, such as sorting programs or linear algebra programs. A purely
+	functional language must recreate the data structure from scratch each
+	time a change is required.
+    </ol>
+  <p>
+    Various compiler techniques and programmer annotations have been developed
+    to handle these situations and make the performance hit to a functional
+    program much less pronounced. 
+  </ol>
+<p>
+<li> My Perspective: One of my favorite quotes is the following one by an
+  anonymous individual:
+<blockquote>
+The greatest tragedy of all history is the murder of a beautiful theory by
+a gang of brutal facts.
+</blockquote>
+   I feel this quotation applies to functional programming. In theory it is elegant,
+   and its lack of side-effects can lead to reduced development times because
+   of fewer errors. In practice though the world is a messy place that 
+   constantly demands side-effects (input/output, the update problems mentioned
+   above), and in my experience, functional programming falls apart in the
+   presence of these side-effects. As one example, we have seen in class how
+   elegant looking
+   functional programs get transformed into messy looking, obscure code when 
+   we have to convert the original versions to more efficient, tail-recursive 
+   forms. In practice, I have seen very few situations that benefit from
+   a purely functional approach (tree and graph traversals come to mind, as
+   do some recurrence relations).
+   <p>
+   Another knock against functional programming from my perspective is 
+   that we are brought up from birth in an imperative-oriented world 
+   of "do this" and "do that". It takes considerable training to re-orient
+   most programmer's thinking to the more functional thinking of mathematicians,
+   and most programmers either will not, or can not, master it. 
+   <p>
+   Finally, many of the most useful ideas from functional programming, such
+   as garbage collection, anonymously created on the fly functions (i.e.,
+   lambda functions), and higher-order functions, such as map and reduce (fold),
+   have been finding their way into imperative languages, especially scripting
+   languages. 
+   <p>
+   In fact, the one very valuable thing that I think is evolving
+   into imperative languages from functional languages is the concept of
+   higher-order functions that can do a tremendous amount of computation with
+   just one or two lines of code.
+   As a post-doc I spent two years programming in Lisp, and its higher-order
+   functions were the biggest asset to me in programming. In the end I
+   had to use side-effects all the time, because I was programming for
+   graphical user interfaces. It took me about 6 months to become comfortable
+   with this "pidgin" form of functional programming, and I never really 
+   became comfortable with Lisp's
+   prefix notation. I am also not comfortable with the more mathematical
+   notation that later functional languages developed to denote functions. 
+   <p>
+   For those of you with a natural mathematical bent, I encourage you to 
+   examine functional languages in more depth. However, I suspect that the
+   world at large will remain a largely imperative shop, with the more
+   desirable characteristics of functional languages mixed in.
+  

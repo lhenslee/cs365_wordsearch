@@ -1,0 +1,710 @@
+<center>
+<h1> Exception Handling </h1>
+</center>
+<p>
+<hr>
+<p>
+<pre>
+I. Basic Concepts
+
+   A. Exception: 
+
+	1. An unusual event, either erroneous or not
+	2. Detectable by either hardware or software
+	3. May require special processing
+
+   B. Exception handler: A code fragment that processes an exception
+
+   C. Examples of exceptions
+	1. End of file
+	2. Division by 0
+	3. Bad input
+ 	4. Subscript out of range
+	5. Pointer out of range (seg fault in C)
+
+   D. Exception handling in languages that do not provide exception-handling
+	capabilities (e.g., C)
+
+	1. Function returns a status flag
+	   a. program unit that calls the function must check the status
+	  	flag and take appropriate action
+	2. Caller passes the name of a function that handles the
+		exception to the callee
+	   a. The callee calls the function with appropriate parameters
+		if an exception occurs.
+	   b. disadvantage--if several exceptions must be handled, several
+		exception handlers must be provided with every call
+	3. Programmer uses setjmp/longjmp
+	   e.g., result = setjmp(buffer);
+		if (!result)
+	   	     protected code
+		     longjmp(buffer, error_code) // longjmp could appear in a subroutine
+		 } else
+		     error handling based on error_code
+	   a. setjmp stores registers, including pc, sp and fp, into a buffer
+	      i. first call to setjmp returns 0
+	      ii. call by longjmp restores the registers in the buffer and
+	      	   returns control to the setjmp call. This time setjmp returns
+		   error_code, causing control to pass to the error handling routine
+  	   b. problem: setjmp tosses all nested stack frames by restoring
+	   	the old values of sp and fp
+		i. any values that were held in registers by the protected
+			code and not written to memory are lost. Hence some
+			changes made by the successfully executed portion of
+			the protected code may be lost
+		ii. C's solution: programmer may use the <b>volatile</b>
+			keyword to indicate that a variable's value may
+			change "spontaneously", e.g., due to an I/O operation
+			or a concurrently executing thread
+			1) all C implementations must honor the volatile
+			   keyword by immediately writing to memory any
+			   change to a variable and always loading from
+			   memory the value of a variable before using it.
+			   Note that frequent loads or writes could significantly
+			   slow down the execution of the program because loads
+			   from memory require many more instruction cycles
+			   then register reads and hence may stall the
+			   processor pipeline.
+        4. Signal handler: Certain system-generated exceptions, such
+	   as seg faults and bus errors, are expressed via <i>signals</i>.
+
+	    a. It is possible to provide signal handlers to catch signals.
+	    b. A signal handler is a function that takes an int parameter denoting
+		the number of the signal.
+	    c. When the signal handler returns, <b>the behavior of the process is
+		often undefined</b>. Often the control picks up where the signal
+		occurred and the offending instruction is re-executed. If the
+		problem causing the signal has not been fixed, the signal will
+		be re-generated, thus causing an infinite series of handler calls.
+	    d. You register a signal handler with the kernel by calling the
+		signal() function with the number of the signal and a pointer to
+		the signal handler
+
+                void sig_handler(int signal_num) {
+		    if (signal_num == SIGSEGV)
+			printf("received SIGSEGV\n");
+		}
+
+		int main() {
+		    signal(SIGSEGV, sig_handler);
+		}
+
+	    e. It is inadvisable to write a signal handler because it is very difficult
+		to fix the problem, and hence your program will seem to go into an
+		infinite recursion unless the signal handler terminates the program.
+
+    E. Advantages to having built-in exception handling capabilities
+
+	1. Code can be considerably less cluttered
+
+	   a. exception handling can be put in a separate section rather than 
+		interspersed with the code that's trying to accomplish some
+		task
+	   b. separating the exception code from the normal processing
+		code allows the flow of the normal processing code to be
+		uninterrupted, which makes it easier to read and understand
+		by a programmer
+
+	2. Encourages a user to consider all of the events that could
+		occur during program execution and consider how they should
+		be handled. The compiler can enforce this consideration by
+		flagging as an error any unhandled exception. In contrast,
+		a C programmer can blissfully ignore an error (maybe the
+		programmer does not even know the function called can raise
+		an error) and then have the program unceremoniously dump
+		core some undetermined amount of time after the software
+		has been released.
+
+II. Exception Handling in C++
+
+    A. Exception Handlers
+
+	1. Specified using a try-catch clause
+
+	    try {
+	 	// Code that is expected to raise the exception
+	    }
+	    catch(formal parameter) {
+		// A handler body
+	    }
+	    ...
+	    catch(formal parameter) {
+		// A handler body
+	    }
+	    catch(...) {
+	        // An optional catch-all handler (the ... is actually C++ 
+	        // syntax)
+            }
+
+	2. catch functions can have only a single formal parameter
+
+	   a. parameter can be either a basic type or a user-defined class
+	   b. user-defined classes provide a way of passing multiple
+		parameters.
+	   c. the parameter can be an ellipsis (...) in which case the
+		handler is a catch-all handler
+	   d. the formal parameter can be ignored by not providing a variable
+		name
+
+        3. any variable declared within the try block is de-allocated <i>before</i>
+	    the catch statement is executed. Hence if you want access to
+	    a variable used or assigned a value within the try block, make
+	    sure you declare that variable outside the try block.
+	   
+    B. Binding Exceptions to Handlers
+
+	1. exceptions are raised using the throw command:
+		throw [expression];
+
+	        Example: throw new BadOperatorException(operatorToken,
+	                   "bad operator token");
+
+	2. A throw without an operand can only appear in a handler
+
+	    a. Such a throw reraises the exception and propagates it to
+		an outside program unit. If there is another, more general
+		exception handler that could handle the exception in the 
+		same catch list as the handler that reraises this throw,
+		the handler will not be called.
+
+	    b. Throws are matched to exception handlers whose formal parameter
+		matches the type of the thrown expression
+
+		i. A handler with a formal parameter of type T matches an
+			expression of type T, const T, T&, or const T&
+
+		ii. A handler with a formal parameter that is a class type T
+			matches any expression with class type T or whose
+			type is a derived class of T.
+
+			Example:  class Exception {...}
+				  class StackException {...}
+
+			          try {
+					throw StackException();
+				  }
+
+				All of the following catch statements will
+				catch the above exception:
+
+				a. catch (StackException e) {...}
+				b. catch (StackException &e) {...}
+				c. catch (Exception e) {...}
+				d. catch (Exception &e) {...}
+
+				You could put a <i>const</i> in front of any
+				of the formal parameter declarations
+				(e.g., catch (const StackException e)) and
+				each catch would still catch the exception 
+
+				The following catch statement will <i>not</i>
+				catch the above exception because Exception *
+				expects a heap allocated object, not a stack
+				allocated object:
+
+				catch (Exception *e) {...}
+
+		iii. A handler with a formal parameter of *T matches <i>only</i>
+		        exception objects that are allocated off the heap
+
+		     Example:  try {
+			         throw new StackException();
+ 			       }
+			       catch (StackException &e) {
+				   // does not catch the exception
+				   ...
+			       }
+			       catch (StackException e) {
+				   // does not catch the exception
+			       }
+			       catch (StackException *e) {
+				   // catches the exception because it matches
+				   // the the type of the exception object,
+				   // which is (StackException *).
+			       }
+
+			1) It is bad form to throw an exception object that
+				is allocated from the heap because the catcher
+				has to remember to de-allocate the object.
+
+			2) It is better to throw an exception object that
+				is allocated from the stack because C++ will
+				automatically de-allocate the object.
+
+			3) If you throw an object, modify the object, and
+				then rethrow it, use a reference parameter to
+				catch the object. If you use a value parameter,
+				C++ will copy the <i>original</i> thrown 
+				object, not the modified object
+
+			   Example:  throw StackException();
+
+				Right:  catch (StackException &e) {
+					   e.setValue(10); throw; }
+
+				Wrong:  catch (StackException e) {
+					   e.setValue(10); throw; }
+
+	    c. The throw is matched by examining the catch statements that
+		follow the try statement in sequential order. That means
+		that exception handlers with more restrictive types should
+		be placed before exception handlers with more general types.
+
+	    	i. If the throw cannot be matched locally then it is
+			dynamically propagated up the call chain.
+
+    C. Continuation
+
+	1. After a handler completes execution, control flows to the first
+		statement following the try construct (the statement
+		immediately after the last catch statement).
+
+	2. If the exception was thrown out of the function and up the
+		call stack, then all stack frames up to the catching
+		function are popped off the stack and any stack-allocated
+		local variables/parmeters are de-allocated.
+
+		a. need to be careful that heap-allocated objects get
+		   de-allocated. This may require catching an exception
+		   you might otherwise not catch. For example:
+
+		   void g() {
+			throw std::exception();
+		   }
+
+		   void f() {
+			int *x = new int;
+			*x = 3;
+			g();
+			delete x;
+		   }
+
+		   int main() {
+			try {
+			    f();
+			} catch (std::exception e) { ... }
+		   }
+
+		   Because f() did not catch the exception thrown by g(),
+		   the memory pointed to by x never gets deleted. To
+		   fix this problem, you would need to put a try/catch
+		   clause into f() and have the catch clause delete x.
+
+    D. Other Design Choices
+
+	1. The standard template library provides a std::exception class
+	    a. Included using &lt;exception&gt; 
+	    b. Contains a virtual what method that returns a char string
+		denoting the type of exception:
+
+		virtual const char* what();
+
+		For the exception class it returns the string "std::exception".
+
+	    c. There are several subclasses of interest, all of which can
+		be caught by your program
+	
+		exception
+		    bad_alloc: thrown by new on allocation failure (this is
+			why you don't check to see if new returns NULL--it
+			does not--it throws a bad_alloc error)
+		    bad_cast: thrown by dynamic_cast on failure
+		    runtime_error: thrown when certain runtime conditions
+			occur
+			underflow_error: thrown when an arithmetic underflow
+				occurs
+			overflow_error: thrown when an arithmetic overflow
+				occurs
+			system_error: thrown by the OS for certain errors
+				and includes an error code that is typically
+				specific to that platform and is non-portable
+                    logic_error
+			out_of_range: thrown by vector, queue, dequeue,
+			   and some other std classes on out of range errors
+			length_error: thrown by vector or string on resizing
+			   error
+
+	2. Exceptions cannot be disabled
+	3. System-detected exceptions cannot be handled except those 
+		thrown as system_error (e.g., seg fault and bus error
+		cannot be handled via this exception handling approach
+		because these exceptions do not generate C++
+		exceptions but instead generate signals)
+	4. You can specify which exceptions get thrown out of a function
+		without being handled using the throw keyword. For example:
+
+		void f() throw (DivisionByZeroException) {...}
+
+	    a. The throw statement was deprecated in the C11 standard and
+		should not be used any more
+	    b. The C++ compiler does not verify whether or not you 
+		throw other exceptions out of the function, so this option
+		is primarily for documentation purposes.
+
+    E. Example:
+
+	// superclass for all array exceptions. It can catch any array
+	// exception that is thrown
+        class ArrayException {
+	    public:
+	      virtual void response() = 0;
+	};
+
+	// thrown if the program tries to create an array whose size is
+	// negative
+        class ArraySizeException : public ArrayException {
+	public: 
+	  int size;
+	  ArraySizeException(int s) : size(s) {}
+	  void response() { printf("Error: The array size of %d is negative\n",
+				   size);
+	  }
+	};
+
+	class ArrayOutOfBoundsException : public ArrayException {
+	    public:
+	        int index;    // the index that was tried
+	        int size;     // the size of the array
+	    public:
+	        ArrayOutOfBoundsException(int i, int s): index(i), size(s) {}
+	        void response() {}
+	};
+
+	// note that all throws do not involve the allocation of memory
+	// off the heap. Instead they throw a stack-allocated object 
+	class SafeArray {
+	    protected:
+	        int *data;
+	        int size;
+	    public:
+	        SafeArray(int s = 10): size(s) {
+		    if (size <= 0) throw ArraySizeException(size);
+		    data = new int[s];
+		    for (int i = 0; i < size; i++)
+			data[i] = 0;
+		}
+	        void set(int index, int value) {
+		    rangeCheck(index);
+		    data[index] = value;
+		}
+		int get(int index) {
+		    rangeCheck(index);
+		    return data[index];
+		}
+	    protected:
+		void rangeCheck(int index) {
+		  try {
+		    if ((index < 0) || (index >= size))
+			throw ArrayOutOfBoundsException(index, size);
+		  }
+	          // note the rethrow of the error condition
+		  catch (ArrayOutOfBoundsException &e) { printf("caught it\n"); throw; }
+		}
+	};
+
+	int main() {
+	    SafeArray *myArray;
+
+	    try {
+		myArray = new SafeArray(100);
+		myArray->set(3, 10);
+		myArray->get(-1);
+	    }
+	    catch (const bad_alloc &e) {
+		fprintf(stderr, "Out of memory error occurred while trying to allocate memory for myArray\n");
+	    }
+	    catch (const ArrayOutOfBoundsException &e) {
+		fprintf(stderr, "index %d is out of range. Must be between 0 and %d\n", e.index, e.size);
+	    }
+
+	    for (int i = -2; i <= 100; i++) {
+		try {
+		    myArray->set(i, i);
+		    if (i == 50)
+		      new SafeArray(-10);
+		}
+	        catch (const ArrayOutOfBoundsException &e) {
+		    fprintf(stderr, "index %d is out of range. Must be between 0 and %d\n", e.index, e.size);
+	        }
+		catch (ArrayException &e) {
+		  e.response();
+	    }
+
+	    }
+	}
+
+	Executing this code produces the following output:
+
+	caught it
+	index -1 is out of range. Must be between 0 and 100
+	caught it
+	index -2 is out of range. Must be between 0 and 100
+	caught it
+	index -1 is out of range. Must be between 0 and 100
+	Error: The array size of -10 is negative
+	caught it
+	index 100 is out of range. Must be between 0 and 100
+
+III. Exception Handling in Java
+
+    A. Types of Exceptions
+
+	1. All Java exceptions are descendants of the Throwable class. 
+		Throwable provides three very helpful methods:
+
+	    a. printStackTrace(): prints the standard error message for
+		this class plus a record of the method calls leading
+		up to this exception. This method should not be redefined by
+		subclasses.
+
+	    b. getMessage(), toString(): both methods return a string object
+		that contains the standard error message for this class.
+		Typically each subclass redefines this method.
+
+	2. Java pre-defines two exception classes that are subclasses of
+		Throwable
+
+	    a. Error: This class and its descendants are related to errors
+		that are thrown by the Java virtual machine, such as running 
+		out of heap memory.
+
+		i. These exceptions are never thrown by user programs and 
+			should never be handled by user programs
+
+		ii. Your program will be terminated when one of these errors
+			occurs
+
+	    b. Exception: Has two descendents
+
+		i. IOException: Thrown when an input or output operation
+			has an error
+
+		ii. RuntimeException: All other run-time errors
+
+		   1. Java provides a number of pre-defined exception classes 
+			such as ArrayIndexOutOfBoundsException and
+			NullPointerException
+
+		--User-defined exceptions should subclass Exception
+
+    B. Exception Handlers
+
+	1. Same form as C++ except that all formal parameters must be
+		present (can't use ellipsis).
+
+	2. Ellipsis can be simulated by catching an Exception object.
+
+	    a. To get the specific name of the class that was thrown,
+		use Java's getClass() method to get the class object and
+		then the getName() method to get the class's name:
+
+		catch (Exception genericObject) {
+		    String name = genericObject.getClass().getName();
+		    ...
+		}
+
+    C. Exception Binding: Same as C++
+
+    D. Continuation: Same as C++
+
+    E. Differences from C++
+
+	1. All thrown objects are allocated off the heap, so all throw
+	   statements have the form:
+
+		throw new ExceptionObject;
+
+	2. Rethrowing an object: In Java, when you rethrow an object you
+		must specify the object that you are rethrowning. In C++,
+		you simply call throw. 
+
+	    a. In Java since all exception objects are allocated off the
+		heap you do not have to worry about what happens when you
+		modify an exception object. The modified object is automatically
+		passed by the rethrow statement
+
+		Example: Java			      C++
+
+			 catch(StackException e) {    catch(StackException &e) {
+				e.setValue(10);		e.setValue(10);
+				throw e;		throw;
+			   }			      }
+
+	3. Declaring unhandled exceptions: In Java, if a method throws an 
+		exception that it does not handle, then it should declare 
+		that it does not do so by using the <i>throws</i> statement. 
+
+	    a) Syntax: ret-type methName(param-list) throws exception-list 
+		       { ... }
+
+		where exception-list is a comma separated list of exception
+		names
+
+		Example: char readToken() throws IOException {
+			    return (char) System.in.read();
+			 }
+
+	        Notice that you must worry about exceptions thrown by
+		methods that you call. Hence the throws statement is
+		required both for exceptions that a method explicitly throws
+		and for exceptions that are generated but not handled by
+		methods it calls
+
+	    b) Exception to the rule (pardon the pun :)): If the exception
+		is a subclass of Error or RuntimeException, then the method
+		does not need to specify the exception in the throws list
+
+	    c) If you fail to specify an unhandled exception in the throw
+		list, and it is not subject to the above exception, the Java
+		compiler will generate an error message
+
+		i) In C++ it is not required for a method to declare that it 
+			does not handle	an exception (although it is optional 
+			and can be done using the throw statement).
+
+	4) The <b>finally</b> clause: In Java, the finally clause provides a 
+		way to execute a block of code regardless of whether the
+		try exits normally or abnormally. You might need to do this
+		to clean up system state, such as closing a file.
+
+	    a) The finally statement is placed after the last catch statement
+
+	    b) The code in a finally statement is executed even if a return
+		statement is executed within the try or one of the catch
+		clauses
+
+	    c) The code in a finally statement is executed even if no catch
+		clause catches the exception
+
+		Example:
+		public class temp {
+		    public temp() {}
+		    public void execute() throws MyException {
+			try {
+			    throw new MyException();
+			}
+			finally {
+			    System.out.println("Leaving execute via finally");
+			}
+		    }
+		    public static void main(String [] args) {
+			temp foo = new temp();
+			try {
+			    foo.execute();
+			} catch (MyException e) {
+			    System.out.println("caught MyException in main");
+			}
+			System.out.println("Leaving main");
+		    }
+		}
+
+		class MyException extends Exception {}
+
+		Executing this code generates the following output:
+
+		Leaving execute via finally
+		caught MyException in main
+		Leaving main
+
+    F. Java Example: Here's the Java code that implements the same C++
+	program shown earlier. Notice that I had to add an additional
+	catch clause to the first try statement in main since Java requires me
+	to handle all exceptions that are declared to be thrown by a
+	method. In the C++ example I did not handle the ArraySizeError
+	exception in the first try statement but in Java I must.
+
+         class SafeArray {
+	    int data [];
+	    int size = 10;
+	    
+	    // Note that we assume the new operator succeeds. If it does
+	    // not, Java throws an OutOfMemoryError. Note that this is
+	    // a subtype of Error, which means your program should not
+	    // attempt to handle it--your program will be terminated
+
+	    public SafeArray(int s) throws ArraySizeError {
+		size = s;
+		if (size <= 0) throw new ArraySizeError(size);
+		data = new int[size];
+		for (int i = 0; i < size; i++)
+		    data[i] = 0;
+	    }
+
+	    public void set(int index, int value) throws ArrayOutOfBoundsError {
+		rangeCheck(index);
+		data[index] = value;
+	    }
+	    public int get(int index) throws ArrayOutOfBoundsError {
+		rangeCheck(index);
+		return data[index];
+	    }
+	    
+	    void rangeCheck(int index) throws ArrayOutOfBoundsError {
+		try {
+		    if ((index < 0) || (index >= size))
+			throw new ArrayOutOfBoundsError(index, size);
+		}
+		catch (ArrayOutOfBoundsError e) { 
+		    System.err.println("caught it"); 
+		    throw e;
+		}
+	    }
+
+	     public static void main(String args[]) {
+		 SafeArray myArray = null;
+
+		 try {
+		     myArray = new SafeArray(100);
+		     myArray.set(3, 10);
+		     myArray.get(-1);
+		 }
+		 catch (ArrayOutOfBoundsError e) {
+		     System.err.println("index " + e.index + " is out of range. Must be between 0 and " + e.size);
+		 }
+		 catch (ArrayError e) { // catches the ArraySizeError exception
+		                        // thrown by SafeArray
+		     e.response();
+		     System.exit(1);
+		 }
+
+		 for (int i = -2; i <= 100; i++) {
+		     try {
+			 myArray.set(i, i);
+			 if (i == 50)
+			     new SafeArray(-10);
+		     }
+		     catch (ArrayOutOfBoundsError e) {
+			 System.err.println("index " + e.index + " is out of range. Must be between 0 and " + e.size);
+		     }
+		     catch (ArrayError e) {
+			 e.response();
+		     }
+		 }
+	     }
+	 }
+
+       abstract class ArrayError extends Exception {
+	    abstract public void response();
+	}
+
+        class ArraySizeError extends ArrayError {
+	  public int size;
+	    public ArraySizeError(int s) { size = s; }
+	    public void response() { 
+		System.err.println("Error: The array size of " + size + " is negative");
+	  }
+	}
+
+	class ArrayOutOfBoundsError extends ArrayError {
+	    public int index;
+	    public int size;
+	    public ArrayOutOfBoundsError(int i, int s) {
+		index = i;
+		size = s;
+	    }
+	    public void response() {}
+	}
+	
+    G. Another Java Example: <a href="Stack.java">Stack</a>
+</pre>
+

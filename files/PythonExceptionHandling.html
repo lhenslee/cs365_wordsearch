@@ -1,0 +1,205 @@
+<head>
+<link rel="stylesheet" type="text/css" href="../cs365_notes.css" />
+</head>
+<ol>
+<li> Overview: Python's exception handling mechanism is very similar to 
+  Java's exception handling mechanism. It has a try...except format that
+  looks as follows:
+<pre>
+try:
+    protected code
+except ExceptionName<sub>1</sub> as e<sub>1</sub>:
+    error handling code
+except ExceptionName<sub>2</sub> as e<sub>2</sub>:
+    error handling code
+except ExceptionName<sub>3</sub>:
+    error handling code
+except:
+    unconditional error handling code
+    raise   # re-raises the exception
+else:
+    code to execute if the try completes <b>successfully</b>. 
+    This code is non-protected code (i.e., code we do not
+    expect to cause an exception)
+finally: 
+    code executed regardless of whether an exception occurs, and
+    regardless of whether an exception is handled if one occurs
+</pre>
+Here is an example from the Python tutorial:
+<pre>
+import sys
+
+try:
+    f = open('myfile.txt')
+    s = f.readline()
+    i = int(s.strip())
+except IOError as e:
+    print "I/O error({0}): {1}".format(e.errno, e.strerror)
+except ValueError:
+    print "Could not convert data to an integer."
+except:
+    print "Unexpected error:", sys.exc_info()[0]
+    raise
+</pre>
+The try mechanism operates as follows:
+<ul>
+<li> The try clause is executed.
+<li> If no exception occurs, the except clause is skipped and execution of the 
+  try statement is finished. If the optional <tt>else</tt> clauses is
+  present, then the <tt>else</tt> code is executed. Then code in the
+  optional <tt>finally</tt> clause is executed. The finally clause is
+  executed even if the else code triggers an exception.
+<li> If an exception occurs the rest of the try clause is skipped. If the
+  exception's type matches one of the exceptions named in the except list,
+  then the appropriate except clause is executed, followed by the
+  optional <tt>finally</tt> clause.
+<li> If an exception occurs which does not match any exception named in the 
+  except clause, it is passed on to outer try statements; 
+  if no handler is found, it is an unhandled exception and execution stops 
+  with a message printed to the console window or the interpreter. Before
+  the exception is passed on, the optional <tt>finally</tt> clause is
+  executed.
+</ul>
+  <p>
+  It is permissable to write user-defined exceptions, which we will consider
+  in the section on <a href="#UserExceptions">user exceptions</a>.
+<p>
+<li> What to put in <tt>try</tt> and what to put in <tt>else</tt>
+  <p>
+    <ol>
+      <li> You should put code that you suspect might cause an exception in the <tt>try</tt>
+  clause. 
+      <li> You should put code that should conclude the try statement and
+	that should not cause an exception in the <tt>else</tt> clause. Thus
+	if an unexpected error occurs, the exception most likely will be
+	thrown to an outer try statement, rather than being handled by the
+	current try statement's except clauses.
+     </ol>
+<p>
+<li> The <tt>except</tt> clause
+  <ol>
+  <p>
+  <li> An except clause may contain a comma-separated, parenthesized list
+    of exceptions:
+<pre>
+except (RuntimeError, TypeError, NameError):
+</pre>
+    Make sure that the list is parenthesized. Old-style Python allowed you to
+    bind a variable to an exception object using the syntax:
+<pre>
+except Exception, variable
+</pre>
+    so if you omit the parentheses in the above statement, Python will try
+    to bind the variable named TypeError to the exception object for
+    RuntimeError, which is not what you intend.
+<p> 
+   <li> You can bind a variable to the exception object using the syntax:
+<pre>
+except Exception as variable:
+</pre>
+     For example:
+<pre>
+except IOError as e:
+</pre>
+     <tt>e.args</tt> will contain a list of the arguments passed to
+     the exception object.
+    <p>
+   <li> The first exception matched in the except list is the clause that
+     is executed. The remaining clauses will be ignored.
+     <p>
+       <ol> 
+	 <li> Exceptions should be listed from more specific to more general. 
+	   Otherwise the general exception will mask the specific exception.
+	   For example:
+<pre>
+except Exception:
+   ...
+except IOError:
+   ...
+</pre>
+           The "except IOError" will never get executed because an exception
+           will always match the first clause.
+         <p>
+         <li> If an exception occurs in an except clause, it is immediately
+	   passed on to an outer try handler. However the current try's
+	   <tt>finally</tt> method is executed first.
+       </ol>
+   </ol>
+<p>
+<li> Raising Exceptions
+  <ol>
+    <li> The <tt>raise</tt> statement raises an exception. Usually it would
+      be used to raise a user-defined exception by creating an instance of
+      a user-defined class:
+<pre>
+raise NameError('HiThere')
+</pre>
+    <li> You can re-raise an exception by simply typing:
+<pre>
+raise
+</pre>
+      in an except clause. It will then re-raise the exception by passing the 
+      exception to an outer try clause. Obviously this should be the last
+      statement in your except clause.
+   </ol>
+<li id="UserExceptions"> User Exceptions
+   <ol>
+   <li> User exceptions are created by subclassing the pre-defined
+     Python <tt>Exception</tt> class:
+<pre>
+class NameError(Exception):
+  pass
+</pre>
+   <li> Any arguments you pass to the constructor for a user-defined exception
+     will be automatically stored in an attribute named <tt>args</tt>. For
+     example:
+<pre>
+try:
+  raise NameError('Hi There', 5)
+except NameError as e:
+  for v in e.args:
+    print v
+</pre>
+    produces the output:
+<pre>
+Hi There
+5
+</pre>
+   <li> You can also define a constructor that will store the arguments in
+     specific attributes. In this case an except clause must access the
+     arguments through the specific attributes rather than the <tt>args</tt> 
+     attribute. The <tt>args</tt> attribute disappears since it was created
+     by the default constructor, which you have now overridden.
+<pre>
+class NameError(Exception):
+  def __init__(self, name, value):
+    self.name = name
+    self.value = value
+
+try:
+  raise NameError('Hi There', 5)
+except NameError as e:
+  print 'NameError:', e.name, "and error code =", e.value
+</pre>
+   <li> Common Bug: Don't forget to make your exception subclass <tt>Exception</tt>.
+     If you write:
+<pre>
+class NameError:
+  pass
+
+try:
+  raise NameError('Hi There', 5)
+except NameError as e:
+  for v in e.args:
+    print v
+</pre>
+     then you will get the error message:
+<pre>
+TypeError: this constructor takes no arguments
+</pre>
+     The reason is that NameError is no longer a subclass of Exception and
+     hence there is no default constructor that converts the constructor's arguments
+     to a list that is placed in the <tt>args</tt> attribute.
+  </ol>
+</ol>
+      

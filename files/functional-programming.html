@@ -1,0 +1,324 @@
+<head>
+<style>
+ol { list-style-type: upper-roman; }
+ol ol { list-style-type: upper-alpha; }
+ol ol ol { list-style-type: decimal; }
+ol ol ol ol { list-style-type: lower-alpha; }
+ol ol ol ol ol { list-style-type: lower-roman; }
+ol ol ol ol ol ol { list-style-type: decimal; }
+ol ol ol ol ol ol ol { list-style-type: lower-alpha; }
+ol ol ol ol ol ol ol ol { list-style-type: lower-roman; }
+</style>
+</head
+<center>
+<h1>Functional Programming</h1>
+</center>
+<ol>
+<li> Historical Origins
+  <p>
+    <ol>
+      <li> Mathematical Origins: 
+	In the 1930s a variety of mathematicians, including
+  Alan Turing and Alonzo Church, attempted to formalize the notion
+  of an effective procedure (i.e., an algorithm) for computing the solution to 
+  a problem. A procedure represents a <i>constructive proof</i> of a 
+  mathematical conjecture, because it provides a concrete way to obtain
+  a mathematical object with some desired property. It is also possible
+  to obtain <i>non-constructive proofs</i> that an object with the desired
+  property must exist, for example, via contradiction. However such proofs
+  are not useful in computation, because they do not yield a computational
+  procedure that allows us to obtain the mathematical object. The desire
+  to find effective procedures for computing solutions led 
+  these mathematicians to seek constructive, computational models.
+  <p>
+  Turing developed the Turing Machine and Church developed the
+  lambda calculus. The Turing Machine model was an imperative model
+  that emphasized computing using state changes via updates to squares on
+  a tape. The lambda calculus was a functional model that emphasized computing
+  by composing functions and using parameters to communicate state information
+  between functions. It derives its name from the greek character &lambda;, which
+  Church used to
+  introduce parameters to his functions.
+  It was eventually proven that these two models, as well
+  as several other models of computing that were developed at about the same
+  time, were equivalent in terms of their expressiveness, or, put another
+  way, in terms of the set of algorithms they could express. This led Church
+  to conjecture that all intuitively appealing models of computing would be
+  equally powerful as well. This conjecture became known as <i>Church's
+  thesis</i>. 
+  <p>
+  <li> Conceptual Features of Functional Languages
+    <ol>
+      <li> Defines the outputs of a program as a mathematical function of
+	the inputs
+      <li> No side effects, which means no mutable state: A side effect
+	is a change to the value of a name/value binding. 
+	<ol>
+	  <li> In pure functional languages, variables are write-once
+	  <li> State information may be passed from one function to another
+	    via either parameters or via return values
+      <li> Emphasize recursion as opposed to iteration
+    </ol>
+  </ol>
+  <p>
+  <li> Programming Language Origins: Functional languages were first developed
+    in the late 1950s by artifical intelligence researchers. Their first
+    algorithms were based on branch-and-bound, tree search techniques that
+    lent themselves naturally to recursion. As an example of a branch-and-bound,
+    tree search technique, consider the game of chess. White moves first and
+    has a variety of moves, that represent the first level of the tree. Black
+    then moves and has a variety of moves in response to each move that
+    White can make. These moves constitute the second level of the tree. These
+    levels continue to be elaborated, with each level alternating between
+    moves by White and moves by Black. A computer trying to determine the best
+    move to make for either side cannot possibly hope to search the entire
+    tree, and hence only searches the most promising branches. This type
+    of opportunistic search gives rise to the term branch-and-bound. Recursion
+    provides a natural way to search these trees. Additionally, researchers
+    discovered that trees could be easily modeled using lists, where children
+    were denoted as sublists. These observations led to the development of
+    Lisp, which is considered the first functional language. Lisp stands
+    for LISt Processing language. 
+   </ol>
+<p>
+<li> Functional Programming Concepts: Functional languages have a variety
+  of features not traditionally found in imperative languages. However, as
+  you look over the following list, you will see that many of the features
+  do show up in modern scripting languages, and that some of the features,
+  such as garbage collection, even show up in compiled languages such as Java.
+  <p>
+    <ol>
+      <li> 1st class functions: A 1st class value is one which
+	may be returned from a function, passed as a parameter to a function,
+	and created as a value and assigned to a variable (second class values may only be passed
+	as parameters). 
+        <p>
+        Strictly speaking, most imperative languages like
+	C, C++, and Java, treat functions as 2nd class values because you
+	cannot dynamically create a new function and assign it to a variable.
+	By contrast, many functional languages allow functions to create and
+	      return functions. For example, the user of a spreadsheet
+	      creates a function each time the user types a formula into
+	      a cell. A functional language can handle this by passing the
+	      code input by a user to a function constructor and then returning
+	      the resulting function.
+      <li> higher-order functions: A <i>higher-order</i> function takes a function as an 
+	argument, or returns a function as a result. An example of a higher
+	order function is the map function, which takes a function, such
+	as one that sums its two operands, and applies it to two lists, thus
+	doing a pair-wise summation of the elements of the two lists.
+      <p>
+	<li> serious polymorphism: Most functional languages support
+	  implicit, parametric polymorphism, which means that they do not
+	  require users to declare the types of variables, but instead use
+	  either dynamic typing or a sophisticated type inferencing algorithm
+	  to statically determine the types of variables.
+      <p>
+	<li> built-in lists: Lists have a natural recursive structure that
+	  allows them to work nicely with recursive structures. You can 
+	  recursively define a list as follows:
+	  <ol>
+	    <li> The empty list is nil (has no elements)
+	    <li> A list of n+1 elements can be obtained from a list of n
+	      elements by either prepending or appending an element to the 
+	      n-element list 
+	  </ol>
+        <p>
+        <li> structured function returns: most functional langauges allow
+          all structures in their language, including lists and functions,
+	  to be returned from functions. Many imperative languages
+	  do not allow certain structures to be returned from a function. For
+	  example, C/C++ do not allow arrays to be returned from functions, and
+	  imperative languages that support nested functions typically do not
+	  allow nested functions to be returned as return values from 
+	  functions (because then the local variables of the enclosing
+	  function could not be discarded)
+	<p>
+        <li> constructors for aggregates and fully general aggregates:
+	  Functional languages provide function constructors which are not
+	  provided by most imperative languages and they also provide ways
+	  to initialize a structure "all at once". For example, the following
+	  constructor creates a list in Lisp:
+<pre>
+(list (list 3 6 3) (list 3) (list 4 5 (list 1 2 3)))
+</pre>
+          While one can often do a single level of initialization in 
+          imperative languages, it is frequently not possible to do 
+          nested initialization, as in the above example.
+        <p>
+	<li> garbage collection: Both lists and the necessity of allocating
+	  some local variables on the heap generate a tremendous amount of
+	  temporary data that necessitates garbage collection
+        </ol>
+<p> 
+<li> Working with Recursion (Section 6.6 of Scott)
+  <p>
+    <ol>
+      <li> Here is an example of how you can replace looping with recursion.
+	With looping the code looks as follows:
+<pre>
+x := 0; i := 1; j := 100;
+while i < j do
+    x := x + i*j; 
+    i := i + 1;
+    j := j - 1
+end while
+return x
+</pre>
+        With recursion the code becomes f(0,1,100), where
+<pre>
+f(x,i,j) { 
+   if i < j then 
+       f(x+i*j, i+1, j-1) 
+   else x
+}
+</pre>
+        Notice that the recursive code contains no side effects, because
+        each "update" to x, i, and j occurs with fresh x, i, and j variables
+        in a new stack frame. However, it still manages to modify the state
+        by performing the necessary state changes in the argument expressions.
+        This sort of state modification is often called a <i>continuation</i>,
+        since the computation is continued in another function invocation.
+<p>
+   <li> The previous example does not really show functional programming
+     at its most elegant, which is what happens when it models a problem
+     that is truly recursive. Recurrence relations are good candidates for
+     functional programming. For example, the factorial function can be written
+     as:
+<pre>
+f(0) = 1
+f(1) = 1
+f(n) = n * f(n-1)
+</pre>
+     and this recurrence can be nicely modeled using the following recursive
+     function:
+<pre>
+factorial(n) {
+  if (n == 0 or n == 1) return 1
+  else return n * f(n-1)
+}
+</pre>
+     Similarly the greatest common divisor problem can be elegantly written
+     using recursion:
+<pre>
+int gcd(int a, int b) {
+    if (a == b) return a;
+    else if (a > b) return gcd(a - b, b);
+    else return gcd(a, b - a);
+</pre>    
+     Some other natural recursive problems involve:
+     <ol>
+     <li> tree traversals, such as for binary search, or preorder, inorder,
+          and postorder traversals
+     <li> graph traversals, especially for depth-first search
+     </ol>
+  <p>
+  <li> Speeding up Recursion: It is often said that functional programs are slower than imperative
+    programs because recursion is slower than iteration. Recursion is slower
+    because it involves a function call, which in turn involves creating and
+    popping a stack frame. This creation and destruction can create significant
+    overhead, especially when the function does very little computation, as
+    in the factorial and gcd examples shown earlier.
+    <p>
+    <ol>
+    <li> Tail Recursion: If a function is written using tail recursion, then the
+    compiler can optimize the function so that it is actually run as a
+    loop. A <i>tail recursive</i> function is one in which additional
+    computation never follows a recursive call. The return value is simply
+    the value returned by the recursive call. The gcd function is an 
+    example of a tail recursive function, but the factorial function is not, because
+    the factorial function multiplies the result of the recursive call by 
+    <tt>n</tt>. 
+    <p>
+    The compiler optimizes a tail recursive function by re-using the stack
+    frame for the function, rather than creating a new one, and looping back
+    to the beginning of the function after any recursive call. For example, 
+    it can rewrite the above gcd function as follows:
+<pre>
+int gcd(int a, int b) {
+start:
+    if (a == b) return a;
+    else if (a > b) {
+        a = a - b; goto start;
+    }
+    else {
+        b = b -a; goto start;
+    }
+}
+</pre>
+    Note that while the code executes using iteration, the programmer's
+    view was a recursive one. Also note why this strategy fails with the
+    factorial function. If we try to re-use factorial's stack frame, then
+    the value of <tt>n</tt> is corrupted when we return from each recursive
+    call. In fact it will always be 1 on the return from the recursive call,
+    and hence re-using the stack frame will cause the factorial function to
+    always return 1. 
+    <p>
+    <li> Transforming Recursion to Use Tail Recursion: Non tail-recursive
+      functions can be re-written to use tail recursion by pushing the
+      computation into the expressions that compute the arguments. In other
+      words, I re-write the recursion so that it uses a continuation. For example,
+      I can re-write the factorial function to use tail recursion as follows:
+<pre>
+factorial(n, product) {
+   if (n == 0 or n == 1) return product
+   else return fact(n-1, product * n)
+}
+...
+print factorial(5, 1); // computes and prints 5!
+</pre>
+      Personally I do not like this tail-recursive version nearly as much as
+      the original version. I think it is much less elegant and much harder to
+      read and comprehend. This is one reason I dislike functional programming.
+      If the problem is not naturally tail-recursive, then to make it efficient, 
+      one often has to re-write it in an imperative style, which defeats the
+      whole purpose of writing a functional program. Here's another example
+      using fibonacci numbers. It has an easy recurrence relation (according
+      to Wikipedia, the modern sequence is written the following way, not the
+      way written in the Scott text--I will be using Wikipedia's definition):
+<pre>
+fib<sub>0</sub> = 0
+fib<sub>1</sub> = 1
+fib<sub>n</sub> = fib<sub>n-1</sub> + fib<sub>n-2</sub>
+</pre>
+      and a natural functional implementation:
+<pre>
+fib(n) {
+  if (n == 0) return 0
+  else if (n == 1) return 1
+  else return fib(n-1) + fib(n-2)
+}
+</pre>
+      Unfortunately this implementation is horribly inefficient. It is in fact
+      exponential, as you can see if you try tracing the actual sequence of
+      function calls. In C you could write a linear time implementation as:
+<pre>
+int fib(int n) {
+  int f1 = 0; f2 = 1;   
+  int i;
+  for (i = 2; i <= n; i++) {
+     int temp = f1 + f2;
+     f1 = f2; f2 = temp;
+  }
+  return f2;
+}
+</pre>
+     Using this implementation as a template and also assuming I can use
+     nested functions, I can write a linear time
+     continuation-based, functional version for the fibonacci sequence:
+<pre>
+fib(n) {
+  fib-helper(f1, f2, i) {
+    if (i == n) return f2;
+    else return fib-helper(f2, f1 + f2, i+1);
+  }
+  return fib-helper(0, 1, 0);
+}
+</pre>
+    While I think this example helps show the utility of nested functions, I
+    think it also again shows the ugliness that mars functional programming
+    when we have to worry about efficiency. The original elegance of the
+    fibonacci program has been destroyed, and in my opinion, the continuation-based
+    version is much harder to understand and comprehend. You may draw different
+    conclusions based on your own background and proclivities.
+</ol>

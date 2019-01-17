@@ -1,0 +1,138 @@
+<center> <h1>Major Differences Between Java and C++ </h1></center>
+<p>
+<hr>
+<p>
+<h2> Memory Management </h2>
+<p>
+<ol>
+<li> Java has no explicit memory reclamation operators--garbage collection
+     used instead.
+<p>
+<li> Java has no explicit pointers
+<p>
+<li> Java eliminates value (i.e., stack-allocated) objects--all objects 
+     are allocated off the heap.
+<p>
+</ol>
+<hr>
+<h2> Project Management </h2>
+<p>
+<ol>
+<li> Java has a module mechanism called <i>packages</i> that groups
+     related classes together. Classes in the same package typically
+     can directly access one another's instance variables. Java's
+     package mechanism eliminates the need for C++'s kludgy friends operator
+     and namespace mechanism.
+<p>
+<li> Java has no .h files. All the declarations and code for a class are
+     placed in the same .java file. Java's designers made this decision because
+     they felt it was confusing to have to keep switching back and forth
+     between .h and .cpp files to determine how a class operates.
+     <p>
+     <ul>
+     <li> Typically you will only declare one class per file.
+     <li> The class name must match the file name
+     </ul>
+<p>
+<li> Java does not require a make file. The compiler is supposed to find
+     all the necessary .java files using a CLASSPATH environment variable
+     (discussed later in the course) and then compile the .java files if
+     they are out of date.
+</ol>
+<p> 
+<hr>
+<h2> Inheritance </h2>
+<p>
+<ol> 
+<li> Java does not support multiple inheritance because the developers of
+     Java felt that both the conceptual and implementation complexities
+     and ambiguities it introduces outweigh the benefits. Java instead
+     uses the notion of <i>interfaces</i> for classes that want to support
+     more than one set of methods. Interfaces will be discussed later in
+     the course.
+<p>
+<li> All methods in Java are virtual methods.
+</ol>
+<p>
+<hr>
+<p>
+<h2> Other Language Differences </h2>
+<p>
+<ol>
+<li> Functions cannot exist outside objects--even <tt>main</tt> is part of
+     an object.
+<p> 
+<li> Java does not have formatted input although it uses C++'s notion of
+     a stream. You can use a scanner class to break an input line into
+     tokens. Java has both a formatted output statement similar to C++ and
+     special formatting classes, like a
+     DecimalFormat class, that allow various primitive types to be formatted.
+     The reason for providing formatting objects is to simplify the
+     internationalization of software. The formatting objects will return
+     different representations of an object depending on the region in
+     the world where the software is executing. For example, the DecimalFormat
+     class formats floating point numbers using decimal points in the US
+     and using commas in Europe. This type of formatting is more flexible
+     than the hardcoded formatting that is done in C++ programs, although
+     it is also more complicated to use.
+<p>
+<li> Text-oriented I/O can seem clunkier in Java than in C/C++ because Java
+	was designed to work with graphical interfaces, and hence do
+	graphical I/O. When Java became popular as a mainstream computing
+	language, the developers added in text-oriented I/O.
+</ol>
+<p>
+<hr>
+<p>
+<h2> Environment Issues </h2>
+<p>
+<ol>
+<li> Java does not compile its programs down to machine-level instructions as
+     is done by C++. Instead it compiles programs into byte codes that are
+     interpreted by a <i>virtual machine</i>. A virtual machine is a software
+     program that simulates a machine and its instruction set. 
+<p>
+<li> Because of its byte codes, Java is architecture-neutral. In other words,
+     a Java byte code program will run on any machine on which its virtual
+     machine runs. This does mean that the virtual machine must be specially
+     coded for each architectural platform.
+<p>
+<li> Java's virtual machine provides a good deal of run-time checking to
+     ensure that the program does not breach the security of the platform
+     on which the program is running:
+     <p>
+     <ul>
+     <li> array bounds checking
+     <li> type checking of downcasts
+     <li> garbage collection so that the programmer does not have to handle
+          memory deallocation and dangling pointers
+     <li> explicit manipulation of pointers, such as pointer
+	arithmetic, is not allowed.
+     </ul>
+<p>
+<li> The interpretation and runtime services come at the price of decreased
+     efficiency. Even well coded Java programs often run two times slower than
+     corresponding C++ programs. 
+     <p>
+     <ol>
+     <li> Just-in-time (JIT) compilers can compile
+     byte codes down to machine instructions but the resulting programs
+     are still less efficient than corresponding C++ programs because:
+     1) the programs still must provide the run-time services, and 2) a
+     compiler can optimize a program better when it has access to the original
+     source code than to the byte codes.
+     <li> Hot-spot compilers analyze a program and find frequently
+	executed fragments that are called <i>hot spots</i>. A
+	dynamic, optimizing compiler is invoked on these hot
+	spots to improve the code. Hot-spot compilers are now
+	the default compiler for Java code and on some benchmarks
+	can even beat C or C++-compiled code. Hot-spot compilers
+	incorporate JIT compilers.
+     </ol>
+<p>
+<li> Java does not create a single monolithic object file like C++ does.
+     Instead it dynamically loads classes as they are requested by the
+     program. This means that a program sent over
+     the Internet can start executing before all of its classes have
+     arrived.
+</ol>

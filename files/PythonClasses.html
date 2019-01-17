@@ -1,0 +1,210 @@
+<head>
+<link rel="stylesheet" type="text/css" href="../cs365_notes.css" />
+</head>
+<ol>
+<li> Overview: Python classes are a cross between C++ classes and Modula 3
+  classes. Classes are themselves objects and support multiple inheritance.
+<p>
+<li> Class declaration
+  <ol>
+    <li> Syntax
+<pre>
+class classname:
+   variable initializations
+   fct definitions
+</pre>
+    <li> Example
+<pre>
+class Point:
+   x = 0
+   y = 0
+   def addPoint(self, p1):
+      newpoint = Point()
+      newpoint.x = self.x + p1.x
+      newpoint.y = self.y + p1.y
+      return newpoint
+</pre>
+    <li> Classes are objects so you may dynamically add and delete both
+      attributes and functions
+      <p>
+	<ol>
+      	  <li> You can declare a function outside a class and then
+	    assign it to the class. It will become a method for all
+	    instances, including existing instances. This is a good way to fix a
+	    function without having to shutdown the Python interpreter.
+          <li> Each class and each instance has a dictionary variable called
+	    <tt>__dict__</tt> that stores all instance variables and function
+	    definitions
+          <li> <tt>del Point.x</tt>: deletes <tt>x</tt> from Point
+        </ol>
+    <p>
+    <li> Instance variables (called attributes or properties in Python)
+      <p>
+	<ol>
+	  <li> Values of instance variables are inherited by instances, but may be overridden:
+	    Python first looks in the instance's <tt>__dict__</tt> dictionary
+	    and if it does not find the attribute, then it looks in the
+	    class's <tt>__dict__</tt> dictionary
+	  <li> Referenced using the dot (.) operator
+	  <li> All attributes are public. A convention for implying that
+	    an attribute is private is to put a _ before it. For example:
+<pre>
+class Stack:
+  _top = 0
+</pre>
+	  <li> Variables with primitive types are instance variables, but
+	    variables with mutable types, such as lists or dictionaries, act
+	    like class variables if you modify the value, as opposed to 
+	    replacing the value. For example:
+<pre>
+>>> class Dog:
+...    tricks = []
+...    def addTrick(self, trick):
+...       self.tricks.append(trick)
+... 
+>>> smiley = Dog()
+>>> ebber = Dog()
+>>> smiley.addTrick("beg")
+>>> ebber.addTrick("fetch")
+>>> print smiley.tricks
+['beg', 'fetch']
+>>> print ebber.tricks
+['beg', 'fetch']
+</pre>
+         If we replace the value, then the attribute becomes a local
+         attribute
+<pre>
+>>> smiley.tricks = ['beg']
+>>> smiley.tricks
+['beg']
+>>> ebber.tricks
+['beg', 'fetch']
+</pre>
+         See <a href="#constructors">constructors</a> for a technique that
+         allows you to create local attributes with mutable values.
+        </ol>
+        <p>
+        <li> Methods
+	  <p>
+	    <ol>
+	      <li> Pointer to an instance is automatically passed to a method
+		but this pointer must be explicitly declared as the first
+		parameter to the method. By convention, Python programmers
+		declare this variable as <i>self</i>
+              <p>
+	      <li> When a function is defined in a class declaration, it
+		becomes a function in the resulting class object, but a method in
+		any instances. 
+		<ol>
+		  <li> Subtle but important difference between
+		    a function and a method. 
+		    <p>
+		      <ol>
+			<li> The programmer must explicitly pass an instance
+			  object to a function 
+			<li> A pointer to an instance is implicitly passed as the
+			  first argument to a method.
+			<li> The following two calls are essentially identical, and
+			  Python essentially translates the second call into the
+			  first call:
+<pre>
+a = Point()
+b = Point()
+c = Point.addPoint(a, b)     // function call
+c = a.addPoint(b)            // method call
+</pre>
+                      </ol>
+		   <p>
+		   </ol>
+	      </ol>
+              <p>
+		<li id='constructors'> Constructors: The __init__ function
+		  (two underscores before and after init)  is the constructor
+		  for a class
+		  <p>
+		    <ol>
+		      <li> Only one __init__ function is allowed
+		      <li> Attributes that store mutable values should be
+			initialized in the constructor:
+<pre>
+class Stack:
+  def __init__(self):
+    self.top = 0
+    self.data = []
+</pre>
+                    </ol>
+               </ol>
+<p>
+<li> Inheritance
+  <p>
+    <ol> 
+      <li> Syntax
+<pre>
+class DerivedClassName(BaseClassName):
+    <statement-1>
+    .
+    .
+    .
+    <statement-N>
+</pre>
+      For example:
+<pre>
+class LabradorRetriever(Dog):
+    hair = 'short'
+    personality = ['friendly', 'good with children', 'love to fetch']
+</pre>
+     <li> All methods are virtual, so a subclass can always override its
+       base class's methods
+       <ol>
+	 <li> Can call base class method using
+	   <tt>BaseClassName.methodname(self, arguments)</tt>: Note
+	   that because you are referencing the base class object, you
+	   must pass the self argument explicitly, since you are
+	   actually calling a function, not a method
+       </ol>
+     <p>
+     <li> Multiple Inheritance
+       <p>
+	 <ol>
+	   <li> Syntax
+<pre>
+class DerivedClassName(Base1, Base2, Base3):
+    <statement-1>
+    .
+    .
+    .
+    <statement-N>
+</pre>
+           <li> Resolving attribute names and method names
+	     <p>
+	       <ol>
+		 <li> Old-style classes: depth-first, left-to-right through
+		   the base classes (i.e., first the inheritance hierarchy
+		   for Base1 is searched, then Base2, and so on until the
+		   name is resolved)
+		   <p>
+		     <ol> 
+		       <li> old-style classes are created by default and are
+		       the ones we will use in this course, since we are
+			 using the Python 2.7 interpreter
+		       <li> old-style classes were abolished in Python 3,
+			 but classes defined in the old way will still 
+			 appear to behave like old-style classes
+		     </ol>
+		     <p>
+		 <li> New-style classes: new-style classes have at least
+		   one diamond relationship because all new-style classes
+		   inherit from <tt>object</tt>. To keep the base classes from being accessed more than once, a dynamic algorithm linearizes the search order in a way that preserves the left-to-right ordering specified in each class, that calls each parent only once, and that is monotonic (meaning that a class can be subclassed without affecting the precedence order of its parents). 
+		   <p>
+                    <ol>
+	              <li> New-style classes were introduced in Python 2.2
+		      <li> New-style classes are the only class available 
+			after Python 3, but they are still not part of the
+			standard Python documentation, so their integration
+			into the language is currently rather poor.
+		    </ol>
+		</ol>
+	       </ol>
+	 </ol>
+    </ol>
+</ol>

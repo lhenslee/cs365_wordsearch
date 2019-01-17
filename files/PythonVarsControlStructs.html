@@ -1,0 +1,494 @@
+<head>
+<link rel="stylesheet" type="text/css" href="../cs365_notes.css" />
+</head>
+<ol>
+<li> Python Overview
+   <ol> 
+   <li> What it's good for
+       <ol>
+	 <li> Most similar syntactically of the scripting languages to a conventional 
+   programming language
+	 <li> Works well in creating graphical user interfaces
+	 <li> Works well as a convenient calculator
+       </ol>
+   <li> What it's not so good for: Also designed to work with shell-like 
+     tasks, but I'd probably prefer Perl
+   </ol>
+<li> Invoking the Python Interpreter
+   <ol>
+   <li> Command-line interpreter: Type "python"-useful as a calculator and
+     trying out snatches of code
+   <li> Invoked with a file:
+<pre>
+python foo.py
+</pre>
+        <ol> 
+	  <li> Argument Passing
+	  <ol>
+	    <li> arguments can be accessed via sys.argv
+	    <li> import sys
+	    <li> argv[0] contains the name of the file
+          </ol>
+        </ol>
+   </ol>
+<li> Comments
+  <ol>
+    <li> # starts a one-line comment
+    <li> """...""" starts a multi-line comment: also used for documentation
+      strings
+  </ol>
+<li> Python as a Calculator (or how it works with numbers)
+  <ol>
+    <li> Supports *, /, -, +, %
+    <li> ** is exponentiation
+    <li> / is integer arithmetic if both operands are integers, and
+      floating point otherwise
+    <li> float(x) converts a number to a float if you need floating point
+      arithmetic and int(x) converts a number to an integer if you need
+      integer arithmetic.
+    <li> _ holds the last computed result, so you don't have to assign
+      an expression to a variable
+   </ol>
+ <li> Strings: Treated like a primitive type
+    <ol>
+      <li> Types
+	<ol>
+	<li> Single quotes
+	<li> Double quotes
+        <li> Triple quotes--span multiple lines
+	<li> Use \ to escape quotes
+	<li> Use r'...' to include \'s in your strings: r stands for
+	  "raw string"
+      </ol>
+      <li> String Operations
+	<ol>
+	  <li> Strings are immutable: assignment is really assignment of
+	    a pointer
+	  <li> + is concatenation
+	  <li> Can use 0-based indexing to access individual chars
+	  <li> Can use negative indexing starting at -1 to access chars
+	    from the end of the string
+	  <li> len(s): returns length of a string
+	  <li> slicing allows you to get a substring
+	    <ol>
+	      <li> s[3:6]: string with characters 3 to 5, excludes 6
+	      <li> s[:6]: start of string to character 5
+	      <li> s[3:]: from character 3 to end of string
+	      <li> s[-3:]: from 3rd to last character to end of string
+	    </ol>
+          <li id='stringsplit'> <tt>str.split([delimiter])</tt>: Splits a string into fields based
+	    on the delimiter. The default delimiter is a space. Unlike some
+	    other scripting languages, split treats consecutive delimiters
+	    as a single delimiter. For example:
+<pre>
+>>> a = "3    5     8"
+>>> a.split()
+['3', '5', '8']
+</pre>
+            <tt>split</tt> is a nice way to break input lines into fields.
+	  <li> <tt>str.strip()</tt>: returns a new string with the 
+	    leading and trailing whitespace stripped away:
+<pre>
+>>> a = "brad vander zanden, yifan tang, george brett"
+>>> names = a.split(',')
+>>> names
+['brad vander zanden', ' yifan tang', ' george brett']
+>>> names[1].strip()
+'yifan tang'
+</pre>
+          <li> Interpolation: not supported in Python. You must use a
+	    string's <a href="PythonIO.html#format">format()</a> method
+	    instead.
+        </ol>
+        <li> Converting values to strings
+	  <ol>
+	    <li> str(val): converts val to a human readable string
+	    <li> repr(val): converts repr to a representation that
+	      can be read by the Python interpreter
+	    <li> Example:
+<pre>
+>>> x = 1
+>>> s = 'the value of x is ' + x
+TypeError: cannot concatenate 'str' and 'int' objects
+>>> s = 'the value of x is ' + str(x)
+>>> s
+'the value of x is 1'
+</pre>
+            </ol>
+	  </ol>
+<li> Lists: A built-in data type
+  <ol>
+    <li> Syntax: a = [3, 4, 5, 6]
+    <li> Individual elements can be accessed using array notation: a[2]
+    <li> len(a): returns length of the list
+    <li> a[1:3]: returns a sublist starting at index 1 and ending at index 2
+    <li> lists are mutable
+      <ol>
+	<li> a[2] = 64: replaces the element at index location 2 with 64
+	<li> a[1:3] = [4, 5, 6, 7]: replaces the slice 1:2 with the list 4,5,6,7
+	<li> a.insert(3, 8): Inserts 8 at index position 3: Items starting at
+	  position 3 are moved to the right
+	<li> a.append(3): appends 3 to the end of the list
+      </ol>
+    <li> lists may be nested: [3, 4, [6, 7, 8], [9, 10], 3]--b[2][1] would
+      return 7
+    <li> lists are pointed to by pointers, although you cannot get access
+      to the pointers
+        <ol>
+	  <li> when you use assignment, shallow copying is used, so modifying
+	    a variable will cause all other variables pointing to the same
+	    list to "change"
+<pre>
+a = [3, 4, 5]
+b = a
+b[2] = 8
+a    // prints [3, 4, 8]
+</pre>
+        </ol>
+     </ol>
+<li> A Short Program
+<pre>
+a, b = 0, 1
+while b < 10:
+    print b
+    a, b = b, a+b
+</pre>
+    Comments
+     <ol>
+      <li> You can use multiple assignment, and the right hand side is
+	completely evaluated before the values are assigned to the left hand
+	side--this makes things like swap much easier to perform
+      <li> : terminates the condition in control constructs: () not needed
+	around conditions
+      <li> indentation rather than braces used to show grouping
+	<ol> 
+	  <li> shortens	programs
+	  <li> avoids implied grouping errors in languages that use
+	        braces 
+	  <li> is controversial
+        </ol>
+      <li> print 
+	<ol>
+	  <li> prints a comma separated list of arguments with spaces between
+	the arguments. 
+	  <li> suppress a newline by ending the arguments with a comma
+        </ol>
+     </ol>
+<li> Boolean operations
+  <ol>
+    <li> True/False: boolean constants
+    <li> relational operators: use for both numbers and strings
+    <li> boolean operators: all boolean operators are short-circuit
+      operators
+      <ol>
+	<li> a and b: logical and
+	<li> a or b: logical or
+	<li> not a: logical not
+      </ol>
+    <li> conditions can be chained
+<pre>
+10 <= a <= 20    # true if a between 10 and 20
+a < b == c       # true if a < b and b == c
+</pre>
+    <li> using lists to avoid multiple or's:
+<pre>
+if name in ['frank', 'george', 'ralph']: 
+</pre>
+is equivalent to
+<pre>
+if (name == 'frank') or (name == 'george') or (name == 'ralph'):
+</pre>
+</ol>
+<p>
+<li> if statement
+  <ol>
+    <li> syntax:
+<pre>
+if condition:
+    statements
+elif condition:
+    statements
+elif condition:
+    statements
+...
+else:
+    statements
+</pre>
+    <li> Must use <b>elif</b> rather than <b>else if</b>
+    <li> Note that all control statements (if, elif, else) end with :
+    <li> Python has no switch statement
+    </ol>
+<li> for loop
+  <ol>
+    <li> for loop iterates over a sequence:
+<pre>
+for var in sequence:
+    statements that operate on var
+</pre>
+    For example, the following code sums the elements of a list:
+<pre>
+sum = 0
+for value in data:
+    sum = sum + value
+</pre>
+    <li> there is no equivalent of C's counting for loop
+    <li> use the range command if you want a counting loop
+      <ol>
+	<li> range(x): returns a list of numbers from 0 to <tt>x-1</tt>. For example:
+<pre>
+range(4)  # yields [0, 1, 2, 3]
+</pre>
+        <li> range(x,y): returns a list of numbers from x to <tt>y-1</tt>
+	<li> range(x,y,n): returns a list of numbers from x to <tt>y-1</tt>
+	  incremented by <tt>n</tt> each time.
+<pre>
+range(0, 10, 3) # yields [0, 3, 6, 9]
+range(10, 0, -3) # yields [10, 7, 4, 1]
+</pre>
+      </ol>
+    <li> Example: to sum the numbers from 1 to 10:
+<pre>
+sum = 0
+for i in range(1,11):
+    sum = sum + i
+</pre>
+<p>
+<li> how to iterate over different types of sequences
+  <p>
+    <ol>
+      <li> enumerate(): gives you both the position index and value
+<pre>
+>>> for i, v in enumerate(['tic', 'tac', 'toe']):
+...     print i, v
+...
+0 tic
+1 tac
+2 toe
+</pre>
+      <li> zip(): Allows you to loop over two or more sequences at the same
+	time--pairs corresponding entries from each sequence. The following
+	code computes the dot product of two vectors:
+<pre>
+>>> vector1 = [10, 20, 30, 40, 50]
+>>> vector2 = [5, 10, 15, 20, 25]
+>>> for v1, v2 in zip(vector1, vector2):
+...   product = product + v1 * v2
+... 
+>>> product
+2750
+</pre>
+      <li> reversed(): returns a iterable that iterates through a sequence
+	in reverse:
+<pre>
+for v1 in reversed(vector1):
+   print v1
+</pre>
+      <li> dictionaries:
+	<ol>
+	  <li> use <tt>dict.keys()</tt> to iterate through the keys
+	  <li> use <tt>dict.iteritems()</tt> to iterate through the
+	    key value pairs:
+<pre>
+>>> people = { 'brad': 45, 'yifan': 36, 'smiley' : 5 }
+>>> for k, v in people.iteritems():
+...     print k, v
+... 
+yifan 36
+smiley 5
+brad 45
+</pre>
+      </ol>
+   </ol>
+  <li> break, continue, and else on a loop
+  <ol>
+    <li> break: breaks out of the most enclosing loop
+    <li> continue: continues with the next iteration of the loop
+    <li> else on a loop: executes when the loop's condition becomes false,
+      but not if the loop is terminated by a break statement. Here's an
+      example that prints whether each number in a range is a prime number:
+<pre>
+for n in range(2, 10):
+     for x in range(2, n):
+         if n % x == 0:
+             print n, 'equals', x, '*', n/x
+             break
+     else:
+         # loop fell through without finding a factor
+         print n, 'is a prime number'
+</pre>
+    </ol>
+</ol>
+<li> Functions
+  <ol>
+    <li> Syntax
+<pre>
+<b>def</b> functionName(args):
+    """ Documentation String """ (<b>optional</b>)
+    function body
+    return value
+</pre>
+    <li> Native types are passed by value
+    <li> Objects are passed by reference. If you modify the object, then
+      you have modified the argument, because you accessed the object through
+      the reference.
+    <li> Variables are local by default. Python implements this by
+      introducing a local symbol table for each function
+      <ol>
+	<li> Any time you assign a value to a variable, the variable is
+	  written to the local symbol table
+	<li> When you access a variable, Python first checks the local symbol
+	  table. If the variable is not in the local symbol table, then Python
+	  checks the global symbol table.
+	<li> If you want to change a global variable, not a local variable,
+	  then declare the variable as global at the beginning of the function
+<pre>
+def foo():
+   global x
+   ... statements that modify x ...
+</pre>
+     </ol>
+    <li> The documentation string has a standard format that allows 
+      documentation tools to automatically extract information about the
+      function for documentation manuals
+      <p>
+	<ol>
+	  <li> The first line should be a concise statement of the function's
+	    purpose
+	  <li> The second line should be blank, to create a visual separation
+	  <li> The remaining lines should provide further documentation about
+	    how the function is implemented, its side effects, its parameters,
+	    etc.
+	  <li> Here's an example:
+<pre>
+def dfs(x, y):
+    """ Perform a depth first search starting at x and ending at y
+
+        Parameters 
+           x: The node from which to start the search
+           y: The node at which to terminate the search
+
+        Side-Effects: None
+    """
+    ...
+</pre>
+      </ol>
+        <li> Variable-length argument lists: You can define variable length
+	   argument lists but we won't use them in this class
+	<li> Lambda functions: Lambda functions allow you to create anonymous
+	   functions. For example, suppose you were implementing a spreadsheet
+	   and wanted to make the input the user provides in a cell an
+	   executable formula. You might write:
+<pre>
+def makeFormula(formula):
+    return lambda: formula
+
+newFormula = makeFormula("a + b")
+</pre>
+           Here's another example that creates an incrementer:
+<pre>
+def makeIncrementer(n):
+    return lambda x: x + n
+
+f = make_incrementor(42)
+f(1)   # returns 43
+</pre>
+        <ol>
+           <li> lambda functions must be a single expression that computes
+	     a value
+	   <li> cannot use conventional if-then-else. Instead use:
+<pre>
+lambda x,y: x if x < y else y
+</pre>
+           <li> can't use loops in lambda functions
+       </ol>
+       <p>
+       <li> Generator Functions: You can create a function that incrementally
+	 returns results using the <tt>yield</tt> statement. For example:
+<pre>
+>>> def fib():
+...    yield 1
+...    yield 1
+...    current, prev = 1, 1
+...    while True:
+...      current, prev = current + prev, current
+...      yield current
+... 
+>>> for i in fib():
+...   if i > 100:
+...     break
+...   print i
+... 
+1
+1
+2
+3
+5
+8
+13
+21
+34
+55
+89
+</pre>
+          <ol>
+	    <li> When you call a generator function, it creates and returns
+	      a generator object. The generator object retains its state 
+	      information between calls
+	    <li> How to use a generator function
+	      <p>
+		<ol>
+		  <li> In a loop as above
+		  <li> Assign the generator object to a variable and then
+		    call <tt>.next()</tt> each time you want the next value
+<pre>
+>>> a = fib()
+>>> a.next()
+1
+>>> a.next()
+1
+>>> a.next()
+2
+>>> a.next()
+3
+>>> a.next()
+5
+</pre>
+              </ol>
+	    <li> You cannot easily use the yield statement in a recursive
+	      function, because when you think you are calling the function
+	      recursively, you are really creating a new generator function,
+	      rather than calling the existing function. For example:
+<pre>
+def factorial(n):
+   if n == 1:
+      yield 1
+   else
+      yield n * fact(n-1)
+</pre>
+              This won't work like you think because you expect <tt>fact(n-1)</tt>
+              to return a number, but it in fact returns a generator object
+              and hence the multiplication fails with a type error. 
+              <p>
+	      There are sophisticated solutions beyond the scope of this 
+	      course for doing recursive generator functions. An easier way
+	      is to declare a nested function that returns a list of the
+	      results, and then returns the results one at a time:
+<pre>
+def factorial(n):
+   def fact(n):
+      if n == 1:
+         return [1]
+      else:
+         result = fact(n-1)
+         result.append(n*result[-1])
+	 return result
+   results = fact(n)
+   for i in results:
+      yield i
+</pre>
+     </ol>
+</ol>
+<li> Coding Style: We won't cover it in class, but you should read the 
+  generally accepted conventions for Python's <a href="https://docs.python.org/2/tutorial/controlflow.html#intermezzo-coding-style">coding style</a>.
+</ol>
+      

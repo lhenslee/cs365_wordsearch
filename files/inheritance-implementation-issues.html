@@ -1,0 +1,99 @@
+<center>
+<h1> Inheritance Implementation Issues </h1>
+</center>
+<p>
+<hr>
+<p>
+<pre>
+I. Virtual Methods
+
+        1. The first field of each object points to a <i>virtual method table</i>.
+
+	    a. This table is often called a <i>vtable</i>.
+
+	    b. Each entry in the table is the address of one of the virtual
+	        methods in the object
+
+	    c. The table does not contain the addresses of non-virtual methods,
+	        since the addresses of these methods can be statically
+		inserted into the object code by the linker.
+
+	2. When the program calls a virtual method, the compiler inserts
+	        code to lookup the address of the method in the object's
+		vtable and jump to that address
+
+		Example: The call f->m() will be translated to the following
+		   code, assuming that m is the third method in the vtable:
+
+		   r1 = f   // load the address of f into register 1
+		   r2 = *r1 // puts the address of the vtable into register 2
+		            // since the vtable pointer is the first field in
+			    // every object
+		   r2 = *(r2 + 2*4)     // assuming 4 = sizeof(address)--
+		                        // retrieves the contents of the third
+					// entry in the vtable, which is the
+					// address of m (assumes table is 0-indexed)
+		   call *r2  
+
+	3. The vtable for a derived class is created by:
+
+	    a. Copying the vtable from the base class 
+	    b. Updating the vtable to point to any virtual methods that
+	        the derived class redefines
+	    c. Appending to the vtable the addresses of any additional 
+	        virtual methods that are defined by the derived class
+
+	    This arrangement guarantees that the methods declared by the
+	    base class will be found in the same place in both the base
+	    class's and the derived class's vtables. This is why it does
+	    not matter whether a variable declared as a pointer to the
+	    base class actually contains a reference to an object of the 
+	    derived class type.
+
+        4. Reasons why virtual methods slow down a program's performance
+
+	    a. The dynamic lookup process shown above requires at least two
+	       more memory accesses than a static method call requires (the
+	       loading of the address of f is required in both cases since
+	       the address of f must be passed as the <i>this</i> argument.
+
+	    b. The compiler often cannot <i>inline</i> a virtual method
+
+	        i. inlining involves replacing a method call with the method's
+		   body, thus eliminating the overhead of both a function
+		   call and its return (calling and returning from a function
+		   requires manipulating the stack).
+
+	       ii. the compiler can only inline a method if it knows at compile
+	           time which method will actually get called at run-time. 
+		   Virtual methods can be inlined provided the compiler can
+		   determine the type of an object statically, but this 
+		   determination is often impossible. 
+
+	       Side notes:
+
+	           1) The C++ compiler will automatically inline any method
+		      that is defined in a .h file (i.e., whose implementation
+		      is included in the .h file)
+
+		   2) You can ask a C/C++ compiler to inline a function by
+		      prefixing the function header with the <b>inline</b>
+		      keyword:
+
+		      inline int getBalance();
+
+II. Object Layout
+
+        1. If the class contains any virtual methods, then the first field
+	   will be a pointer to the vtable. If the object does not contain
+	   any virtual methods, then there will be no virtual table and
+	   the fields of the object will start at offset 0.
+
+        2. Next come the fields (i.e., instance variables) of the object. 
+
+	3. A derived class appends its fields to the fields of its base
+	   class. As with vtables, this appending process ensures that
+	   the base class's instance variables can be found in the same
+	   place in a derived object's record as in a base object's record.
+
+</pre>

@@ -1,0 +1,131 @@
+<center>
+<h1> Java's Module Mechanism (Packages) </h1>
+</center>
+<hr>
+<pre>
+I. Packages 
+
+    A. What they are: Packages provide a way of grouping together a
+	   set of related classes as one unit
+
+        1. Packages act like a module in that they provide access control
+	       mechanisms (more on this in a moment)
+
+        2. Packages help partition the name space so that names can
+	       be re-used within different packages
+
+    B. Defining a package
+
+	   a. Use the <b>package</b> keyword to indicate that a class belongs
+	      to a certain package
+
+	   b. The package statement must be the first executable statement
+	      in a file
+
+	   c. Packages can be nested. If they are nested, then you separate
+	       a package name from the one above it by a period.
+
+	       Example: package silhouette;
+	                package silhouette.shapes;
+			package silhouette.shapes.boxobjects;
+
+    C. Importing Packages
+
+	1. Use the <b>import</b> keyword to access a public class from another
+	   package.
+
+	    a. Specifying the name of a class will import that class only
+	    b. Specifying an asterisk (*) after a package name will import
+	       all public classes from that package
+
+	       example: import java.util.LinkedList -- makes the LinkedList
+	                    class accessible
+			import java.util.* -- makes all public classes in
+			    java.util accessible
+	    c. The import statement places the classes returned by the 
+	       statement into the <i>namespace</i> of the current file.
+	       A namespace is the set of names that are defined in the
+	       current <i>scope</i>. A scope is a block of code within which
+	       a set of names are valid. A scope can be a file, a class, 
+	       a method or a block.
+            d. You can also access a class in a different package without
+	       importing it. To do so you provide the fully qualified package
+	       name for the class. For example:
+
+	       java.util.LinkedList myList = new java.util.LinkedList();
+
+	       You might decide to use the fully qualified name if importing
+	       the name would cause a conflict with either a name declared
+	       by your class or with a name imported from another package.
+
+        2. import statements should go immediately after a package statement
+	   and should precede other executable statements in your file.
+
+	3. Java's libraries are contained in packages. 
+
+	    a. In C++ you use #include's to include system-defined libraries
+	       in your program
+
+	    b. In Java you use import statements to include system-defined
+	       libraries in your program
+	        
+	       Example:    C++                    Java
+	                   #include &lt;stdio.h&gt     import java.io.*;
+
+    C. How Java finds classes and CLASSPATH
+
+	    a. The directory containing a package <i>must</i> have the
+	       same name as the package
+
+	    b. All classes belonging to the package must be placed in the
+	       package's directory
+
+	    c. How Java locates class files
+
+	        i. By looking at directories beneath the current directory
+		ii. By examining the set of directories specified by the
+		    <i>classpath</i> flag to the java interpreter or compiler
+<pre>
+                    javac -classpath .:..:/Users/bvz/silhouette chess.java
+		    java -classpath .:..:/Users/bvz/silhouette games.chess
+</pre>
+                    Using this classpath flag, Java will search the
+		    current directory, the directory above the current
+		    directory, and /Users/bvz/silhouette for the names
+		    of package directories. When I execute games.chess,
+                    then games must be a subdirectory in one of the current 
+                    directory, the current directory's parent, or
+                    /Users/bvz/silhouette.
+
+		iii. By examining the set of directories specified by the
+		    <i>CLASSPATH</i> environment variable 
+
+		    Example: setenv CLASSPATH .:..:/Users/bvz/silhouette
+
+                     The advantage of the CLASSPATH environment variable is that
+                     I don't have to specify the -classpath flag every time I
+		     compile or execute a java file.
+		   
+	    d. When executing a java class, the class must be prefixed by
+	        its full package name
+
+		Example: java silhouette.shapes.boxobjects.rectangle
+
+     D. Member Access
+                                        Private  Package   Protected   Public
+					Member   Member    Member      Member
+
+         Visible within same class       Yes      Yes        Yes        Yes
+
+	 Visible within same package     No       Yes        Yes        Yes
+	    by subclass
+
+	 Visible within same package     No       Yes        Yes        Yes
+	    by non-subclass
+
+	 Visible within different        No       No         Yes        Yes
+	    package by subclass
+
+	 Visible within different        No       No         No         Yes
+	    package by non-subclass
+</pre>

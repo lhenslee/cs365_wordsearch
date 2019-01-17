@@ -1,0 +1,357 @@
+<head>
+<link rel="stylesheet" type="text/css" href="../cs365_notes.css" />
+</head>
+<ol>
+<li> Lists
+  <ol>
+    <li> Implemented as an array: Lists of objects or strings are implemented
+      as an array of pointers
+    <li> Useful operations
+      <ol>
+	<li> list.append(val): appends value to the end of the list
+	<li> list.extend(list1): extends list by appending all elements of
+	  list1 to list
+	<li> list.insert(index, val): insert val at the indicated index and
+	  slide all elements at index or higher to the right
+	<li> list.remove(val): removes first instance of val from the list
+	<li> list.pop([index]): with no argument it removes and returns the
+	  last item in the list; otherwise it removes and returns the element
+	  at index.
+	<li> list.index(val): returns the index of the first element in the 
+	  list whose value is val. It is an error if there is no such item.
+	<li> list.reverse(): reverses the elements of the list
+	<li> del(): deletes an element or a slice
+<pre>
+del(a[0])    # deletes element 0
+del(a[2:5])  # deletes elements 2-4
+</pre>
+       </ol>
+     <li> Sorting lists (for more details see Python's <a href="https://docs.python.org/2/howto/sorting.html">Sorting HOW TO</a> documentation)
+       <ol>
+       <li> use either <tt>list.sort</tt> or <tt>sorted(list)</tt>
+	 <ol>
+	   <li> list.sort(): sorts list in place and is slightly more efficient
+	   <li> sorted()
+	     <ol>
+	       <li> returns a sorted sequence and leaves the original sequence unchanged
+	       <li> sorts any sequence that is iterable
+	     </ol>
+           <li> the sort algorithm is <i>stable</i>: It preserves the
+	     order of equal elements in the original list
+	   <li> the sort algorithm sorts in ascending order
+<pre>
+>>> sorted([5, 2, 3, 1, 4])
+[1, 2, 3, 4, 5]
+</pre>
+           <li> Sorting in reverse order: Use the reverse flag
+<pre>
+>>> sorted([5, 2, 3, 1, 4], reverse=True)
+[5, 4, 3, 2, 1]
+</pre>
+           <li> Key functions: Both <tt>sort</tt> and <tt>sorted</tt> take
+	     a key parameter that specifies a function to be applied to each
+	     sort operand. 
+	     <ol>
+	       <li> Applied once per sort, not once per comparison
+	       <li> Examples
+		 <ol>
+		   <li> Sorting names irrespective of case
+<pre>
+names.sorted(key = str.lower)
+</pre>
+                   <li> Sorting tuples
+<pre>
+>>> student_tuples = [
+    ('john', 'A', 15),
+    ('jane', 'B', 12),
+    ('dave', 'B', 10),
+]
+>>> sorted(student_tuples, key=lambda student: student[2])   # sort by age
+[('dave', 'B', 10), ('jane', 'B', 12), ('john', 'A', 15)]
+</pre>
+                   <li> Sorting objects
+<pre>
+>>> sorted(student_objects, key=lambda student: student.age)   # sort by age
+</pre>
+                   <b> Note that in examples 2 and 3 we cannot simply
+		     write
+<pre>
+key = student[2]
+key = student.age
+</pre>
+                     because key is supposed to be a pointer to a <i>function</i>,
+                     not a value</b>
+                   </ol>
+	      </ol>
+              <li> primary and secondary sorting
+		<ol>
+		  <li> Have the key function
+		return a tuple, with the first value being the primary key,
+		and all subsequent values being secondary keys. For
+		example, the following statement sorts students by age and
+		then by name:
+<pre>
+>>> sorted(student_objects, key=lambda student: (student.age, student.name))
+</pre>
+                  <li> If the primary and secondary keys should be sorted
+		    in different
+		    directions (e.g., one is ascending and one is descending)
+		    <p>
+		      <ol>
+			<li> If the secondary is a number, you can use a tuple
+			  and negate the secondary value using a key function
+			<li> Otherwise first sort the sequence
+			  by the secondary key, and then sort the sequence
+			  by the primary key
+		      </ol>
+		   </ol>
+		  <p>
+		 <li> attribute accessor functions: simplify accesses to attributes
+		   <ol>
+		     <li> imported from <tt>operator</tt> module
+		     <li> <tt>itemgetter(index)</tt>: returns element at <tt>index</tt> position
+		       in a tuple
+<pre>
+>>> import operator
+>>> sorted(student_tuples, key=itemgetter(2)) 
+>>> sorted(student_tuples, key=itemgetter(2, 1)) # sorts first on item 2, then item 1
+</pre>
+                     <li> <tt>attrgetter(attribute)</tt>: returns value of <tt>attribute</tt> in an object
+<pre>
+>>> import operator
+>>> sorted(student_objects, key=attrgetter('age'))
+
+# sort by grade and then by age
+>>> sorted(student_objects, key=attrgetter('grade', 'age'))
+</pre>
+                   </ol>
+	     </ol>
+        </ol>
+       <li> Functional Operations on Lists
+	 <ol>
+	   <li> filter(function, sequence): Returns a sequence consisting
+	     of those items from the sequence for which <tt>function(item)</tt>
+	     is true. The following example returns all tuples whose person
+	     makes less than $40,000 a year.
+<pre>
+# \ is a line continuation character
+>>> people = [('brad', 50000), ('yifan', 80000), ('smiley', 15000), ('george', 20000), \
+...     ('james', 10000)]
+>>> filter(lambda person: person[1] < 40000, people)
+[('smiley', 15000), ('george', 20000)]
+</pre>
+	   <li> map(function, sequence): Calls function(item) for each of the 
+	     sequence's items and returns a list of the return values. The
+	     following example returns the cubes of the first 10 
+	     positive integers.
+<pre>
+>>> map(lambda x: x*x*x, range(1, 11))
+[1, 8, 27, 64, 125, 216, 343, 512, 729, 1000]
+</pre>
+	     <p>
+	       <ol>
+		 <li> map may take multiple sequences, in which case the 
+		   function must take as many arguments as there are sequences
+		   and the sequences must have the same length. The following
+		   example computes the pair-wise sum of two vectors:
+<pre>
+>>> vector1 = [10, 20, 30, 40, 50]
+>>> vector2 = [5, 10, 15, 20, 25]
+>>> map(lambda x,y: x+y, vector1, vector2)
+[15, 30, 45, 60, 75]
+</pre>
+	       </ol>
+	   <p>
+	   <li> reduce(function, sequence): Returns a single value 
+	     constructed by calling the function on the 
+	     first two items of the sequence, then on the result, and 
+	     the next item, and so on. 
+	     <p>
+	       <ol>
+		 <li> The function must take two arguments
+		   and return a single value. 
+		 <li> If the sequence has only one value, then that value
+		   is returned.
+		 <li> A starting value may be provided as a third argument:
+<pre>
+reduce(function, sequence, startingValue)
+</pre>
+                   If a starting value is not provided, then the first two
+                   values in the sequence are passed to the function on the
+                   first function call.
+                 <li> The following function computes the sum of a vector:
+<pre>
+>>> vector1 = [10, 20, 30, 40, 50]
+>>> reduce(lambda x,y: x+y, vector1)
+150
+</pre>
+                 <li> This example returns the minimum value in a vector:
+<pre>
+>>> vector1 = [10, 20, 30, 40, 50]
+>>> reduce(lambda x,y: x if x < y else y, vector1)  # only works since 2.6
+
+or
+
+>>> def min(x,y):
+...   if (x < y):
+...     return x
+...   else: 
+...     return y
+... 
+>>> reduce(min, vector1)
+</pre>
+                 </ol>
+           </ol>
+</ol>
+<li> Stacks: Use a list
+  <ol>
+    <li> list.append(x): add an element to the stack
+    <li> list.pop(x): remove an element from the top of the stack
+  </ol>
+<p>
+<li> Queues: Use collections.deque
+  <ol>
+    <li> To use a deque
+<pre>
+from collections import deque
+</pre>
+    <li> Operations
+      <ol>
+	<li> queue.append(x): append a value to the end of the queue
+	<li> queue.popleft(): remove a value from the front of the
+	  queue (i.e., left side of the queue)
+      </ol>
+    <li> Don't use a list to implement a deque: list is implemented
+      as an array so inserts at the front of the list will be O(n)
+    </ol>
+<p>
+<li> Tuples: An immutable sequence
+  <ol>
+    <li> Syntax
+<pre>
+t = (3, 6, 9)   # comma separated list in parentheses
+t = 3, 6, 9     # comma separated list
+t = 4,          # singleton--must have comma at the end
+
+<font color=darkred>t = (4)         # wrong--t is the integer 4 because Python
+                # thinks 4 is an arithmetic expression in ()s
+</font>
+</pre>
+    <li> Access elements of tuples like arrays
+<pre>
+>>> t[1]  
+6
+</pre>
+    <li> Unpacking a tuple: useful for returning multiple values from a
+      function
+<pre>
+x, y, z = t     # x = 3, y = 6, z = 9
+
+def minmax(x, y):
+  if x < y:
+    return (x,y)
+  else:
+    return (y,x)
+
+min, max = minmax(8, 6)
+</pre>
+     <li> Tuples are more space efficient than lists because they are immutable
+       <ol>
+	 <li> Lists over-allocate memory to handle appends
+	 <li> Accesses should be roughly the same for both tuples and lists
+	 <li> Instantiation (i.e., creation) of tuples is an order of 
+	   magnitude faster for tuples because tuples can be built statically
+	   and lists are built dynamically (since lists are mutable and tuples
+	   are not)
+       </ol>
+    </ol>
+<p>
+<li> Dictionaries: Hash tables (also called associative arrays) that store
+  key value pairs
+  <ol>
+    <li> created with {}'s
+<pre>
+>>> tel = {'jack': 4098, 'sape': 4139}
+</pre>
+    <li> accesses look like arrays, but use keys rather than integers
+<pre>
+>>> tel['jack']
+4098
+>>> tel['guido'] = 4127
+</pre>
+    <li> membership testing: use <tt>in</tt>
+<pre>
+>>> 'guido' in tel
+True
+</pre>
+    <li> deletion: use <tt>del</tt>
+<pre>
+del tel['sape']
+</pre>
+    <li> flattening a dictionary into a list
+	<ol>
+        <li> keys(): returns a list of keys
+<pre>
+>>> tel.keys()
+['guido', 'jack']
+</pre>
+	<li> values(): returns a list of values
+<pre>
+>>> tel.values()
+[4127, 4098]
+</pre>
+	<li> items(): returns a list of the key/value
+		pairs as a list of tuples
+<pre>
+>>> tel.items()
+[('jack', 4098), ('guido', 4127)]
+</pre>
+	</ol>
+</ol>
+<p>
+<li> Sets: A unique collection with no duplicates
+  <ol>
+    <li> Creation
+      <ol>
+	<li> With curly braces {}
+<pre>
+x = { 3, 6, 9 }
+</pre>
+        <li> Using the set function and passing a sequence
+		as an argument
+<pre>
+x = set([3, 6, 9])
+x = set()
+</pre>
+        <li> Must create an empty set using <tt>set()</tt>: Empty braces, {},
+	  creates an empty dictionary
+        <p>
+	<li> Duplicates are automatically deleted when the set is created
+<pre>
+>>> x = { 3, 6, 9, 6, 9 }
+>>> x
+set([9, 3, 6])
+</pre>
+      </ol>
+    <li> Operations
+      <ol>
+	<li> Membership testing: Use <tt>in</tt>
+<pre>
+>>> 3 in x
+True
+>>> 4 in x
+False
+</pre>
+        <li> Set operations
+	  <ol>
+	    <li> Union: a | b
+	    <li> Intersection: a & b
+	    <li> Set Difference: a - b
+	  </ol>
+     </ol>
+   </ol>
+<p> 
+<li> Trees: Python does not support trees. You need to create your
+  own tree by creating your own classes (such as a node class) and
+  writing your own algorithm
+</ol>

@@ -1,0 +1,488 @@
+<head>
+<style>
+body { background-color: #DDFFDD; }
+div.code { text-align:center; }
+table.code {
+  border:5px ridge gray;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+}
+table.code td { padding:3px; }
+pre {
+  border: dashed 1px black;
+  padding: 10px;
+  background-color: rgb(240, 240, 240);
+}
+ol { list-style-type: upper-roman; }
+ol ol { list-style-type: upper-alpha; }
+ol ol ol { list-style-type: decimal; }
+ol ol ol ol { list-style-type: lower-alpha; }
+ol ol ol ol ol { list-style-type: lower-roman; }
+ol ol ol ol ol ol { list-style-type: decimal; }
+ol ol ol ol ol ol ol { list-style-type: lower-alpha; }
+ol ol ol ol ol ol ol ol { list-style-type: lower-roman; }
+</style>
+</head
+<center>
+<h1>Scheme</h1>
+</center>
+<hr>
+These notes cover the rudimentary aspects of Scheme. Because I wish to
+emphasize the functional aspects of Scheme, these notes do not cover looping
+constructs--I want you to write your Scheme programs recursively. I also will
+not be covering side-effect inducing statements, such as set!, again because
+I wish to emphasize the functional aspects of Scheme. You can
+download a version of Scheme from the GNU site.
+<p>
+<ol>
+<li> Historical Origins: Scheme is a simplified teaching dialect of Lisp.
+<li> Basic Syntax: Lists form the basis of everything in Scheme, including
+  both the representation of data and of commands. All Scheme commands
+  start with an operator, followed by a list of operands. This notation is
+  called both <i>prefix notation</i> and <i>Cambridge
+  Polish notation</i>. Lists are enclosed in parentheses, (), so a sample
+  Scheme expression for adding two numbers would be:
+<pre>
+(+ 3 4)
+</pre>
+  If I wanted to write an arithmetic expression like 
+  <tt>(a + 10) * (b - 20)</tt>, I would write:
+<pre>
+(* (+ a 10) (- b 20))
+</pre>
+  A function call has a similar syntax. If I want to call the function
+  <tt>avg</tt> on three variables, I would write:
+<pre>
+(avg x y z)
+</pre>
+  Although prefix notation takes some getting used to, it does have an
+  advantage of conciseness when writing out an arithmetic expression involving
+  the same operator. For example, the sum <tt>(a + b + c + x + y + z)</tt>
+  can be concisely specified as:
+<pre>
+(+ a b c x y z)
+</pre>
+ <ol>
+ <li> Comments: Comments start with a semi-colon (;). Anything following
+ a semi-colon to the end of the line is a comment. For example:
+<pre>
+; add two numbers
+(+ 3 7)  ; the result is 10
+</pre>
+ In imperative languages
+ semi-colons frequently delimit statements, but right parentheses
+ perform this function in Scheme.
+  <p>
+  <li> Printing Stuff
+    <ol>
+      <li> The <tt>display</tt> function prints a value, including
+	lists. It can only print a single argument.
+      <li> The <tt>newline</tt> function prints a newline.
+      <li> Example:
+<pre>
+(display "The result is ")
+(display (+ 3 4))
+(newline)
+</pre>
+     </ol>
+   <li> Debugging: You may or may not find the following two debugging
+     information helpful:
+     <ol>
+       <li> (trace function-name): Shows the input arguments and output value 
+            when the function is called. Redefining the function, such as by 
+	    loading a file that defines it, undoes the tracing.
+       <li> <a href="http://www.iro.umontreal.ca/~gambit/doc/gambit.html#Debugging">Gambit debugging commands</a>
+     </ol>
+<p>
+     I typically use a combination of the trace function and display statements
+	to debug my scheme programs.
+  </ol>
+<p>
+<li> The Scheme Interpreter: Most Scheme implementations employ an
+  interpreter that runs a "read-eval-print" loop
+  (often abbreviated REPL). The interpreter repeatedly reads an expression
+  from standard input, evaluates that expression, and prints the resulting
+  value. On our departmental machines, you can invoke the gambit scheme interpreter
+  by typing:
+<pre>
+gsi
+</pre>
+  You can now start typing expressions and it will immediately print the
+  result:
+<pre>
+(+ 3 4)
+7
+(/ (+ 8 10 10) 3)
+28 / 3     ; Lisp supports rational numbers
+</pre>
+  If you make a mistake, such as typing an undefined variable, you will
+  see something like:
+<pre>
+&gt; a
+*** ERROR IN (console)@1.1 -- Unbound variable: a
+1&gt; 
+</pre>
+  Type <tt>,t</tt> to get back to the main prompt. 
+  <p>
+  To quit the interpreter you can from the main prompt
+  type any of the following: <tt>,q</tt>, <tt>(exit)</tt>, or Ctrl-D.
+<p>
+  You may load programs from a file using the <tt>load</tt> function:
+<pre>
+(load "qsort.scm")   ; .scm is the common Scheme suffix
+</pre>
+  Each time you load "qsort.scm", it will evaluate all the expressions
+  in "qsort.scm" and update any previously declared bindings with the
+  new results. In particular, previous function definitions will be overwritten
+  with new function definitions, and hence it is unnecessary to exit the
+  scheme interpreter if you want to fix a program. Instead you edit the file
+  and then reload it.
+<p>
+<li> Basic Lisp Data Types: Lisp supports the usual set of data types--numbers,
+  strings, and boolean values:
+  <p>
+    <ol>
+      <li> numbers: In addition to integers and floating point numbers, Scheme
+	also supports rational numbers, such as <tt>28/3</tt>. When you
+	perform division on integer numbers, Scheme returns a rational number
+	if there is a non-zero remainder, rather than a floating point number.
+      <li> strings: Strings are enclosed in double quotes.
+	For example "Brad" is a string. You may think that 'Brad' is also
+	a string, because it gets accepted by the Lisp interpreter. However,
+	'Brad' is really the symbol <tt>Brad'</tt> (see symbols below). 
+      <li> boolean values: #t and #f represent the values <tt>true</tt> and 
+	<tt>false</tt> respectively. 
+      <li> symbols: Sometimes you will wish to store a symbolic reference
+	to an identifer, without having it be evaluated. You can do so by
+	prefixing the identifier with a quote ('). For example, <tt>'a</tt>
+	allows you to store a symbolic reference to the identifier <tt>a</tt>
+	without evaluating it. This can be helpful when creating functions
+	or expressions dynamically. 
+      <li> characters: Characters are rather clunky in Lisp and we won't deal
+        with them. They start with the notation <tt>#\</tt>. For example,
+        the character 'a' in C is represented as <tt>#\a</tt> in Scheme.
+      </ol>
+<p>
+<li> Lists: Lists are a built-in data type in Scheme and are the most common
+  way of representing structured data. They are created using the <tt>list</tt>
+  keyword:
+<pre>
+(list 3 8 10)
+(list "brad" 7 #t (list 5 8) (list 4 3.2 #t))
+(list)   ; the empty list
+</pre>
+  As you can see, lists can contain heterogenous values and may be nested.
+  The list keyword can be a bit verbose, and so you can also create lists
+  by quoting them:
+<pre>
+'(3 8 10)
+'("brad" 7 #t (5 8) (4 3.2 #t))
+'()  ; the empty list
+</pre>
+  There is one important distinction between creating a list using a quote versus
+  creating a list using the list command. If you use the list command, then all
+  executable expressions will be evaluated, whereas if you use a quote to create
+  the list, then the executable expressions will not be evaluated and instead
+  the individual components of the expression will appear as symbols in the
+  created list. For example:
+<pre>
+(list (+ 4 5) (+ 3 8))   ; creates the list '(9 11)
+'((+ 4 5) (+ 3 8))       ; creates the list '((+ 4 5) (+ 3 8))
+</pre>
+  <ol>
+  <li> cons cells: Lists are created from <i>cons</i> cells, each of which contains two
+  pointers, one to the list element and one to the next cons cell. For 
+  example:
+<pre>
+-----   -----   -----
+| | |-->| | |-->| |/|
+-----   -----   -----
+ |       |       |
+ 3       8      10
+</pre>
+  Primitive elements, such as numbers or strings, are often called <i>atoms</i>.
+  You can also create a cons cell consisting of two atoms using the <tt>cons</tt>
+  command:
+<pre>
+(cons 6 8)
+</pre>
+  which will be displayed by the scheme interpreter as <tt>(6 . 8)</tt>.
+  Such a cons cell is often called an <i>improper list</i>.
+  A <i>proper</i> list always ends with a nil (empty) list. In other words,
+  in a proper list, the final cons cell has a null pointer as its second
+  element.
+  <p>
+  <li> basic list operations: The most basic list operations are the ones
+    that construct them (cons, append) or extract their components (car, cdr,
+    and their variants)
+    <ol>
+      <li> list constructors
+	<ol>
+	  <li> (cons x y): returns a cons cell with the elements <tt>x</tt> and 
+	       <tt>y</tt>.
+	  <li> (append list<sub>1</sub> list<sub>2</sub> ... list<sub>n</sub>):
+	       merges the argument lists into a single list and returns that
+	       list, leaving the individual arguments untouched
+<pre>
+(cons '8 '(10))    ==> (8 10)  ; the list consisting of 8 and 10
+(append '(10 15) '(8) '(6 10 14)) ==> '(10 15 8 6 10 14)
+</pre>
+        </ol>
+      <li> list extractors
+	<ol>
+	  <li> (car list): returns the first element of the list. So named
+	    because the assembly language instruction used to implement this
+	    operation in the first Lisp implementation was called
+	    "contents of address register". Technically car returns the
+            first element of a cons cell. Scheme provides the <tt>first</tt>,
+	    <tt>second</tt> and <tt>third</tt> functions as more mnemonic
+	    ways to extract the first, second, and third elements of
+	    a list. <b>Unfortunately, the gambit interpreter does not
+ 	    support first, second, third, etc., so you must use car and
+	    cdr instead.</b>
+          <li> (cdr list): returns the remaining elements in the list. So named
+	    because the assembly language instruction used to implement this
+	    operation in the first Lisp implementation was called
+	    "contents of decrement register". Technically cdr returns the
+	    second element of a cons cell, which is typically a pointer to
+	    the rest of the list.
+          <li> Scheme supports various combinations of these two commands to
+	    extract elements near the front of a list. For example <tt>cadr</tt>
+	    is short hand for <tt>(car (cdr ...))</tt> and returns the second
+	    element of a list. Similarly <tt>caddr</tt> returns the third
+	    element of a list. You can experiment with other forms to see 
+	    whether or not Scheme supports them.
+<pre>
+(car '(8 10 15))   ==> 8       ; the first element of the list
+(cdr '(8 10 15))   ==> '(10 15) ; the rest of the list  
+(car '())          ==> ERROR  ; the empty list has no elements
+(cdr '())          ==> ERROR  ; the empty list has no elements
+(cdr '(10))        ==> '() ; the empty list '()
+(first '(8 10 15)) ==> 8
+(second '(8 10 15)) ==> 10
+</pre>
+          </ol>
+	<li> the <tt>nil</tt> value (<b>don't use it--it's undefined!</b>): In Scheme, the symbol <tt>nil</tt> used
+	  to represent the empty list, <tt>'()</tt>. However, it has now
+	  been abolished from the standard, so use <tt>'()</tt> instead if
+	  you want to denote an empty list. For example:
+<pre>
+(list? (cons 3 '()))   ; returns #t
+</pre>
+        <li> Finding elements of a list: If you want to determine whether
+	  or not an element is in a list, you can use one of <tt>memq</tt>,
+	  <tt>memv</tt>, or <tt>member</tt>. For example:
+<pre>
+(memq 3 '(6 3 4))   ; returns #t
+(memq 8 '(6 3 4))   ; returns #f
+</pre>
+         <tt>memq</tt> uses the <tt>eq?</tt> function to compare elements,
+	 <tt>memv</tt> uses the <tt>eqv?</tt> function to compare elements,
+	 and <tt>member</tt> uses the <tt>equal?</tt> function to compare
+	 elements. Click <a href="#comparison">here</a> for more details
+	 about the <tt>eq?</tt>, <tt>eqv?</tt>, and <tt>equal?</tt> functions.
+        </ol>
+       <li> Association Lists: You can treat lists like associative maps
+	 if you create a list of pairs. The first element of the pair
+	 represents the key and the second element of the pair represents
+	 the value. For example:
+<pre>
+(define a '(("brad" 3) ("nels" 6) ("summer" 10)))
+</pre>
+         You can return the pair associated with a key in an association
+         list by using the <tt>assoc</tt> function:
+<pre>
+(assoc "summer" a)   ; returns ("summer" 10)
+</pre>
+	 <tt>assoc</tt> uses the <tt>equal?</tt> function to check for
+	 equality. You can also use <tt>assq</tt> or <tt>assv</tt>, which
+	 will use the <tt>eq?</tt> and <tt>eqv?</tt> functions respectively 
+	 to check for equality.
+     </ol>
+<p>
+<li> Type Predicate Functions: Scheme provides a number of type predicate
+  functions that allow you to determine what type of value you are examining.
+  The most useful ones are:
+  <p>
+    <ol>
+      <li> (string? x): is x a string?
+      <li> (number? x): is x a number?
+      <li> (pair? x): is x a cons cell?
+      <li> (list? x): is x a list?
+      <li> (null? x): is x the empty list?
+    </ol>
+<p>
+<li> Variables
+  <ol>
+    <li> Scheme uses dynamic typing so you do not have to declare the type
+      of a variable--its type is determined by the value currently assigned to it
+    <li> Scheme uses static scoping
+    <li> You must declare a variable before you use it. There are two ways
+      to do this:
+      <ol>
+	<li> global variables: global variables are declared using the <tt>define</tt>
+          function:
+<pre>
+(define a 10)
+(define name "brad")
+</pre>
+        <li> local variables: local variables are introduced using the <tt>let</tt>
+	  function:
+<pre>
+(let ((a 10)
+      (b 7))
+     (+ a b))   ; result is 17
+</pre>
+          <tt>let</tt> can be thought of as introducing a block with the
+	  indicated bindings. The bindings are "live" within the let statement
+	  and any nested let statements that do not override the binding.
+	  <ol>
+	    <li> syntax:
+	  The initial argument to let is a list of bindings. The remaining
+	  arguments are a list of expressions to be evaluated within that
+	  let environment. The value of the let expression is the value of
+	  the last expression in the let.
+	    <li> order of evaluation in the binding list: The expressions
+	      in the binding list are conceptually executed in parallel, and
+	      hence bindings later in the list may not depend on bindings
+	      earlier in the list. For example, the following is not allowed:
+<pre>
+(let ((a 10)
+      (b (* a 5)))   ; illegal: b is not allowed to use the value of a
+   ...)
+</pre>
+              because <tt>b</tt> depends on <tt>a</tt> having already been
+              evaluated
+	    <li> order of evaluation in the body: The statements in the
+		body are executed sequentially. The last statement in the
+		body is the value of the let expression. 
+	        <p>
+  	 	<ol>
+		<li> one reason for having multiple statements in a let
+			body is when you have side-effects, such as when
+			using the display function.
+<pre>
+(let ()
+  (display "The result is ")
+  (display (+ 3 4))
+  (newline)
+)
+</pre>
+		</ol>
+            <li> <tt>let*</tt>: If you want to force the bindings in the binding
+	      list to be evaluated sequentially, with earlier bindings being
+	      available to later bindings, then use <tt>let*</tt>:
+<pre>
+(let* ((a 10)
+       (b (* a 5)))   ; b is 50
+   (+ a b))          ; result is 60
+</pre>
+            </ol>
+     </ol>
+</ol>
+<p>
+<li> Conditionals, Relational Operators, and Boolean Operators
+<p>
+  <ol> 
+    <li> Relational Operators:
+      <ol>
+	<li> For Numbers: Use =, &lt;, &lt;=, &gt;, &gt;=  (but not !=, you
+	  must say <tt>(not (= op1 op2))</tt> instead
+        <li> For Strings: Use string=?, string&lt;?, string&lt;=?, etc. but
+	  not string!=?
+	<li id="comparison"> For anything else (although works with numbers and strings as
+	  well)
+	  <ol>
+	    <li> (eq? operand1 operand2): shallow comparison using pointers
+	    <li> (eqv? operand1 operand2): shallow comparison, but it will
+	      return true if the elements have the same length and the same
+	      value. For example, if both <tt>name1</tt> and <tt>name2</tt> have
+	      the value "brad", then <tt>eq?</tt> will return false if 
+	      <tt>name1</tt> and <tt>name2</tt> point to different copies of
+	      "brad", but <tt>eqv?</tt> is required to return true (<b>our
+		scheme interpreter does not seem to accept this definition
+		of eqv? so I will not use it in this course</b>).
+	    <li> (equal? operand1 operand2): deep recursive comparison of
+	      two structures, such as two nested lists
+	  </ol>
+    </ol>
+    <p>
+    <li> Boolean Operators: <tt>and</tt>, <tt>or</tt>, and <tt>not</tt>
+      are defined. You can use <tt>(not string=? ...)</tt> to test whether
+      or not two strings are equal.
+    <p>
+    <li> Conditionals
+      <ol>
+	<li> Simple if-else:
+<pre>
+(if (&lt; a 0)
+    0
+    a)
+</pre>
+          The first argument is a boolean expression that should evaluate
+          to a boolean value. The second and third arguments are the "then"
+          and "else" expressions
+        <p>
+        <li> Compound if-else:
+<pre>
+(cond ((and (&lt; grade 100) (&gt;= grade 90)) "A")
+      ((&gt; grade 80) "B")
+      ((&gt; grade 70) "C")
+      (else "B"))
+</pre>
+          <ol>
+	    <li> The arguments to <tt>cond</tt> are pairs
+	    <li> The pairs are considered in order from first to last
+	    <li> The value of the <tt>cond</tt> is the value of the second 
+	      element of the first pair in which the first element evaluates to
+	      <tt>#t</tt>
+	    <li> If none of the pairs evaluates to #t, then the value of the
+	      <tt>cond</tt> is false
+	    <li> You can use either <tt>else</tt> or <tt>#t</tt> as the
+	      first element of the final pair to ensure that the final
+	      pair provides a default value
+	    <li> You can only provide a single expression for the second
+	      argument to the pair--you may have to call a function to
+	      get a more complicated computation or use <tt>let</tt>. 
+	   </ol>
+   </ol>
+</ol>
+<p>          
+<li> Functions: Functions are constructed using the <tt>lambda</tt>
+  constructor:
+<pre>
+(lambda (x) (* x x))   ; a function that computes x<sup>2</sup>
+</pre>
+  lambda creates an anonymous function object. For it to be useful you
+  usually bind it to a name using either a <tt>define</tt> or a <tt>let</tt>
+  statement. For example:
+<pre>
+(define x2 (lambda (x) (* x x)))
+</pre>
+  <p>
+  <ol>
+    <li> syntax: The first argument to lambda is a list of parameters. The
+      remaining arguments constitute the body of the function. 
+    <li> return value: The value produced by the 
+      last expression executed in a function constitutes the return value
+      of the function. Scheme does not have an explicit return statement so
+      you have to organize your function so that a return statement is not
+      required. That may mean breaking a large function into smaller functions.
+    <li> parameter passing is by reference (the book calls it pass-by-sharing
+      but it is close enough to pass by reference that we will call it such)
+    <li> recursive functions: If you define a nested recursive function
+      (i.e., one inside of a let statement), 
+      you need to use a letrec (<u>let rec</u>ursion) 
+      statement to define a recursive function, since a simple let statement
+      does not allow a value to depend on a previous binding. Here is a
+      simple factorial function:
+<pre>
+(letrec ((fact (lambda (n)
+                 (if (or (= n 0) (= n 1)) 
+                     1
+                     (* n (fact (- n 1)))))))
+   (fact 5)) ; result is 120
+</pre>
+
+  </ol>

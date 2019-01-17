@@ -1,0 +1,230 @@
+<head>
+<link rel="stylesheet" type="text/css" href="../cs365_notes.css" />
+</head>
+<ol>
+<li> Console I/O: I generally don't recommend trying to get input from stdin
+  using Python, but if you insist, read on.
+  <p>
+  <ol>
+  <li> Pre-Python 3: Use <tt>raw_input(prompt)</tt> to get input
+<pre>
+x = raw_input("Enter value: ")
+</pre>
+       The input comes in as a string and you need to convert it to
+       the appropriate representation using a cast. For example, to
+       convert <tt>x</tt> to an int, you would use <tt>int(x)</tt>.
+  <li> Python 3 and later: Use <tt>input(prompt)</tt> to get input
+    <ol>
+      <li> <tt>input(prompt)</tt> was defined before Python 3 but it
+	evaluated a string as though it were a python expression
+    </ol>
+  <li> These commands expect input. If you type Ctrl-D to send the
+    EOF character, you will get an exception, not normal termination.
+  <li> To read from <tt>stdin</tt> without prompting, use <tt>sys.stdin</tt>
+    and treat input like a list:
+<pre>
+import sys    # sys is not pre-defined
+for line in sys.stdin:
+   process the line of input
+</pre>
+   <li> To break a line of input into fields, use the
+     <a href="PythonVarsControlStructs.html#stringsplit">str.split()</a> method.
+     Use
+     <tt>str.strip</tt> to strip away leading and trailing whitespace, including
+     the newline character.
+   </ol>
+<p>
+<li> String Formatting for Output: Use <tt>print</tt> to print a string. This section tells you how
+      to create a formatted string for printing
+
+  <ol>
+    <li> String alignment: For simple alignment, you can use the following
+      commands.
+      <ol>
+	<li> Alignment commands
+      <ol>
+	<li> str.ljust(width): left justifies the string in a field of
+	  the specified width
+	<li> str.rjust(width): right justifies the string in a field of
+	  the specified width
+	<li> str.center(width): centers the string in a field of the
+	  specified width
+        <li> str.zfill(width): left justifies the string in a field of
+	  the specified width and fills blanks with 0's
+      </ol>
+	<li> General 
+	  <ol>
+	    <li> all justification commands return a new string rather
+	      than modifying the original string
+	    <li> if the string is too big too fit in the specified justification
+	      field, then the original string is returned--no truncation is
+	      performed and no justification is performed
+          </ol>
+    </ol>
+   <li id='format'> Formatting a String for Output: The <tt>format()</tt> method can
+     be used like C's printf method to format strings. 
+     <ol>
+       <li> <tt>formatstr.format(arg<sub>1</sub>, arg<sub>2</sub>, ... arg<sub>n</sub>)</tt>: returns a formatted string with arg<sub>1</sub>, arg<sub>2</sub>, ... arg<sub>n</sub>
+	 substituted into <tt>formatstr</tt>. The
+	 original string is not modified.
+       <li> Examples:
+<pre>
+>>> x = 10
+>>> y = 'brad'
+>>> 'x = {0:8d} and y = {1:20s}--correct?'.format(x,y)
+'x =       10 and y = brad                --correct?'
+>>> 'x = {0:<8d} and y = {1:^20s}--correct?'.format(x,y)
+'x = 10       and y =         brad        --correct?'
+</pre>
+        <li> Syntax
+	  <ol>
+	    <li> {}'s specify where the arguments should be placed in the string
+	       <ol>
+		 <li> You may omit the numbers in curly braces, in which
+		   case the default numbering is 0, 1, 2, 3, ...
+		 <li> {0.weight}: Accesses the weight property of the 0th
+		   argument
+		 <li> {0[i]}: Accesses the element at index <tt>i</tt> in
+		   a sequence
+<pre>
+>>> x = [1, 2, 3, 4]
+>>> 'x[1] = {0[1]}'.format(x)
+'x[1] = 2'
+</pre>
+		 <li> {player}: Accesses a keyword argument named player:
+<pre>
+>>> x = 10
+>>> 'x = {player}'.format(player=x)
+'x = 10'
+</pre>
+                 <li> For readability put keyword arguments after positional
+		   arguments
+		 </ol>
+             <li> Format specifiers: Looks much like C's printf except for
+	       alignment specifiers
+	       <ol>
+		 <li> Syntax: {0:formatSpecifiers}
+		 <li> Abbreviated syntax for format specifiers: Everything in []'s is optional. For
+		   full syntax see the <a href="https://docs.python.org/2/library/string.html#formatspec">Formatting Mini-Language</a>.
+<pre>
+[[fill]align][width][.precision][type]
+</pre>		      
+                 <li> fill: any fill character
+		 <li> align: by default numbers are right aligned and
+		   strings are left aligned
+		   <table>
+		     <tr><th>Option</th><th>Meaning</th></tr>
+		     <tr><td> &lt; </td><td>left align</td></tr>
+		     <tr><td> &gt; </td><td>right align</td></tr>
+		     <tr><td> ^ </td><td>center</td></tr>
+		   </table>
+		 <li> width: field width
+		 <li> precision: number of digits after decimal point
+		 <li> type: type of the argument--same types as for printf
+		 </ol>
+             </ol>
+       </ol>
+</ol>
+<p>
+<li> File I/O
+  <ol>
+    <li> opening and closing files
+      <ol>
+	<li> <tt>open(filename, mode)</tt> opens a file and returns a reference
+	  to a file object.
+	  <ol>
+	    <li> mode can be 'r' for read, 'w' for write, and 'a' for append
+	    <li> mode can be omitted in which case it defaults to read
+          </ol>
+        <li> <tt>f.close()</tt>: closes the file object
+	<li> Since you often forget to close files, or exceptions may occur
+	  and the file does not get closed, it is good to get into the habit
+	  of opening files with <tt>with</tt>
+<pre>
+>>> with open('workfile', 'r') as f:
+...     read_data = f.read()
+</pre>
+          When <tt>with</tt> exits for any reason, the file is automatically
+          closed.
+      </ol>
+    <li> reading from files
+      <ol>
+	<li> <tt>f.read()</tt>: reads the entire file into a string
+        <li> <tt>f.readline()</tt>: reads the next line in the file
+	  <ol>
+	    <li> the string will include the newline character. Use 
+	      the string's <tt>strip</tt> method to strip the newline
+	      character.
+	    <li> <tt>readline()</tt> returns the empty string ('') 
+	      when EOF is reached. If
+	      a line is blank, but not EOF, then readline returns "\n".
+	  </ol>
+        <li> You can treat a file like a list:
+<pre>
+for line in f:
+   ... process line ...
+</pre>
+        <li> <tt>f.readlines()</tt>: returns a list of the lines in a file
+	  (each line will have the newline character appended)
+	<li> To break a line of input into fields, use the
+     <a href="python1.html#stringsplit">str.split()</a> method. Use
+     <tt>str.strip</tt> to strip away leading and trailing whitespace, including
+     the newline character.
+        </ol>
+    <p>
+    <li> writing to files
+      <ol>
+	<li> f.write(string): writes a string to a file
+	<li> To write anything other than a string to a file, you must
+	  convert it to a string using <tt>str()</tt>:
+<pre>
+f.write(str(20))
+</pre>
+        <li> 
+Serialization/deserialization: <i>Serialization</i>
+		refers to the conversion of a complex object to a string
+		representation that can be written to a file.
+		<i>Deserialization</i> refers to the conversion of this
+		string representation back to an object when the string
+		is read from the file.
+		<ol>
+		  <li> Two techniques in Python to serialize objects
+		    <ol>
+		      <li> Json to write lists, dictionaries, sequences, and
+			primitive types to files (but not classes!)
+			<p>
+			  <ol>
+			    <li> JSON is a standard used for data exchange among 
+		applications
+			    <li> Python has a <tt>json</tt> module that allows objects
+		to be dumped to a file and then re-loaded
+			    <li> json module commands
+			      <ol>
+				<li> <tt>json.dump(object, fileObject)</tt>: dumps an object to
+				  a file. Only one object may be dumped to a file, so
+				  if you want to dump multiple objects, you must bundle
+				  them up into a list and then dump the list:
+<pre>
+>>> import json
+>>> a
+[3, 4, 5]
+>>> x
+{'nels': 5, 'brad': 3}
+>>> writeList = [a, x, 543]
+>>> json.dump(writeList, f)
+</pre>
+				<li> <tt>json.load(fileObject)</tt>: Loads the json object
+				  from fileObject, parses it, and converts it to the
+				  correct Python object
+				</ol>
+			    </ol>
+			 <li> pickle: You can use the pickle module to 
+			   serialize more complicated objects, such as classes.
+			   We won't discuss pickling in this course.
+			 </ol>
+		    </ol>
+		</ol>
+      </ol>
+</ol>
+
+		     

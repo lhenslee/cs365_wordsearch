@@ -1,0 +1,438 @@
+<head>
+<link rel="stylesheet" type="text/css" href="cs365_notes.css" />
+<style>
+li { margin-top: 5px; }
+</style>
+</head>
+<title> Generic Types in Java, C++, and C </title>
+<center><h1> Generic Types in Java, C++, and C </h1>
+<h2><a href="http://web.eecs.utk.edu/~bvz">Brad Vander Zanden</a></h2>
+</center> 
+
+<hr>
+    <ol>
+    <li> Polymorphism: refers to the ability of the same code to perform the
+        same action on different types of data. There are two primary
+	types of polymorphism:
+        <ol>
+	<li> Parametric polymorphism: The code takes the type as a parameter,
+	    either explicitly (as in C++/Java templates) or implicitly (as in
+	    Lisp, which determines the type from the data being used). Some
+	    compilers, such as the C++ compiler, generate multiple copies of 
+	    the code, one for each type. Other compilers, such as the Java
+	    compiler, generate a single copy of the code which should work
+	    with all types. This is why Java's templates cannot support
+	    primitive types, because a single copy of the code cannot use
+	    built-in operations, such as + or &lt;. Instead it must rely
+	    on method calls, and hence it must work with objects.
+
+	<li> Subtype  polymorphism: Subtype polymorphism is associated with
+	    inheritance hierarchies. It refers to a procedure that should
+	    yield the same behavior but might require different implementations
+	    for different subtypes. There are two types of
+	    subtype polymorphism:
+	    <ol>	
+	    <li> The code is shared between the super class and its children via 
+		a <i>non-virtual</i> method. In this case one copy of the
+		procedure works for all subtypes. 
+	    <li> The super class declares a <i>virtual</i> method for which it
+		expects each subclass to provide a different implementation.
+		In this case the expected behavior is the same, such as to
+		draw an object to the screen or to indicate whether or not a
+		mouse point is contained in the object, but the implementation
+		is different.
+	    </ol>
+        </ol>
+   <li> Polymorphism in C, C++, and Java
+       <ol>
+       <li> Java
+	 <ol>
+         <li> Original approach: the developers of Java felt that C++ templates
+               were too complicated, so their original solution was to provide 
+               the implicit master class Object. 
+	      <ol>
+              <li> Generic code uses the type Object whenever it needs to refer 
+	          to a specific piece of data
+
+	      <li> Programs downcast the Object type to a specific type when they
+	           retrieve an object from a generic data structure
+
+	      <li> Disadvantages
+		<ol>
+	            <li> downcasting can be dangerous
+
+	            <li> Object supports generic data structures but not generic
+	               algorithms, such as quicksort, which require a common
+		       comparator method
+		</ol>
+               <li> Advantages: One copy of the code works with multiple types
+	       </ol>
+           <li> All this downcasting was both bothersome to use, and ran the
+                risk of run-time type conversion errors that could not be
+                type-checked by the compiler. Eventually the Java developers
+                introduced a simplified template mechanism. When programmers
+                declare a variable to use a template type, the declaration looks
+                much like a C++ template. However, the definition of a template
+                type is simpler. Here's a simple declaration of a wrapper
+                type:
+<pre>
+                public class Box&lt;<b>T</b>&gt; {
+
+                    // T stands for "Type"
+                    protected <b>T</b> t;
+
+                    public void add(<b>T</b> t) {
+                        this.t = t;
+                    }
+
+                    public <b>T</b> get() {
+                        return t;
+                    }
+                }
+</pre>
+                As you can see, the type looks like a parameter to a 
+                function. You are allowed to pass multiple types to a
+                template. For example, a hash table would have types for
+                both the key and the value objects.
+<p>
+                Here is a declaration of a variable of type Box, and its
+                use:
+<pre>
+class Test {
+    static public void main(String args[]) {
+	Box&lt;String&gt; b = new Box&lt;String&gt;();
+	b.add(args[0]);
+	String myArg = b.get();
+	System.out.println(myArg);
+    }
+}
+</pre>
+                <ol>
+		<li> Starting with Java 1.7, you can omit the type arguments
+		 required to invoke the constructor. Hence you can instead write
+<pre>
+Box&lt;String&gt; b = new Box&lt;&gt;();
+</pre>
+                <li> Java generics have the restriction that they must be
+                   instantiated with a user-defined class. Hence generics
+                   may not be instantiated with primitive types, such as ints.
+                   If you want to use a primitive type, use its wrapper type
+                   instead, such as Integer.
+
+		<li> Java uses only one copy of the code and uses an "upper
+		   bound" on the type to instantiate the code. In the above
+		   example, Object is the upper bound on the type, and hence
+		   the Java compiler would instantiate the code using the
+		   type Object. If a Box&lt;Integer&gt; were declared, then the Java
+		   compiler would then introduce explicit Integer downcasts
+		   wherever necessary to make the code work.
+
+		<li> If you forget to provide a type argument, either in
+		   declaring a variable with a generic type, or in calling
+		   the constructor to create an object of a generic type, then
+		   you get an object with the <tt>raw type</tt> of the generic
+		   class. The raw type uses Object (or the upper bound for
+		   the type parameter). This can mess you up if you are
+		   expecting to use specific types, since Java may give you
+		   vague error messages. For example in the following code
+		   I have inadvertently omitted the diamond operator from
+		   the instantiation of the LinkedList constructor, which means that 
+		   Java creates a LinkedList that stores Objects rather than
+		   Integers. I get a vague error message:
+<pre>
+class Foo {
+    LinkedList&lt;Integer&gt; a = new LinkedList();
+  
+    Foo() {
+        a.add(3);
+	a.add(6);
+	int x = a.get(0) + a.get(1);
+    }
+}
+
+UNIX&gt; javac Foo.java
+Note: Foo.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+</pre>
+		  If you recompile with <tt>-Xlint</tt> then the Java
+		  compiler will be forthcoming about the fact that you
+		  omitted the diamond operator when creating the LinkedList
+		  object.
+                <li> Generic Methods: You can also declare generic methods within
+                   either non-generic classes, or within a generic class that
+                   has a different type. For example, a generic printing method
+                   that I place inside Box.java might look as follows:
+<pre>
+                   public &lt;V&gt; void print(V data[]) {
+                       for (V val : data) {
+                           System.out.println(val);
+                       }
+                   }
+</pre>
+                   Notice that there is a &lt;V&gt; in front of the void and
+                   after the public keywords. If I had instead used T, I would
+                   not have been required to use a leading &lt;T&gt;.
+<p>
+                   When I invoke a generic method, I may or may not have to
+                   prefix it with the type of the object I am passing in:
+<pre>
+                   Box b;
+                   b.&lt;String&gt;print(args);  // always works
+                   b.print(args) // usually works
+</pre>
+                   If you do not prefix the method call with the type of the
+                   object you are passing as an argument, then the java compiler
+                   will attempt to use type inference to determine the type
+                   of the parameter. Usually this will be successful. If the
+                   java compiler cannot determine the type and gives you an
+                   error message, then you will have to explicitly prefix the
+                   method with the type of the object you are passing to it.
+
+               <li> Bounded Type Parameters: Sometimes you will want to 
+                   guarantee that a type implements a certain interface. For
+                   example, a sort method wants to have certain comparator
+                   methods defined, such as equals and lessThan. You can
+                   require a type to implement either an interface or class
+                   using the keyword <b>extends</b>:
+    <pre>
+public &lt;V extends Comparator&lt;V&gt;&gt; void sort(V data[]){...}
+    </pre>
+               <li> Upper Bounded Wildcards: Suppose that you write the
+		 following code:
+<pre>
+		   List&lt;Number&gt; myList = new List&lt;Integer&gt;();
+</pre>
+                 This code looks like it should compile since Integer is
+a subclass of Number. However, the java compiler complains
+and says that List&lt;Integer&gt; is not a subclass of List&lt;Number&gt;. The
+reason is that myList should be able to store any type of number, such as
+a floating point number, but by assigning it a list of integers, you have
+restricted it to storing only integers. Java considers this an impermissable
+restriction, even though you should be able to perform any operation on
+the list of integers that you could on the list of numbers. To get around
+this restriction, you can use <b>upper bounded wildcards</b>, which indicates
+that a variable can accept an object that contains any subtype of the upper
+bound. For example the following function sums the numbers in a list and can
+accept any list whose objects are a subtype of Number:
+<pre>
+public static double sumOfList(List&lt;? extends Number&gt; list) {
+    double s = 0.0;
+    for (Number n : list)
+        s += n.doubleValue();
+    return s;
+}
+</pre>
+		 <p>
+		   You can also use unbounded wild cards, which is a <tt>?</tt>
+		   followed by nothing else. In the following
+		   example, printList accepts a list
+		   of any type of object:
+		   <pre>
+public static void printList(List&lt;?&gt; list) {
+    for (Object elem: list)
+        System.out.print(elem + " ");
+    System.out.println();
+}
+</pre>		     
+		<p>
+		  <li> Lower Bounded Wildcards: You can also specify that
+		    any supertype of an object can be accepted as a type
+		    parameter. For example, suppose that you want to create
+		    a list variable that can store integers, but you also
+		    this variable to be able to store any type of list that
+		    could store integers, such as List&lt;Number&gt; or
+		    List&lt;Object&gt;. You can accomplish this by specifying
+		    a lower bound with &lt;? super A&gt; where A is the
+		    lower bound for the type. For our list example, we would
+		    declare our variable as:
+		    <pre>
+List&lt;? super Integer&gt; myList;
+		    </pre>
+		    In my experience lower bounds never come up while upper
+		    bounds do because of the desire to use subclasses in
+		    place of superclasses.
+		    </ol>
+       <li> Type Erasure: Java compiles templates into a single piece of
+	 code and it does that by replacing each template parameter with the
+	 template parameter's upper bound. For example, the Box template I
+	 wrote earlier in this note will be compiled as:
+	 <pre>
+                public class Box {
+
+                    protected <b>Object</b> t;
+
+                    public void add(<b>Object</b> t) {
+                        this.t = t;
+                    }
+
+                    public <b>Object</b> get() {
+                        return t;
+                    }
+                }
+	 </pre>
+	 The Java compiler then inserts downcasts into your code to ensure
+	 that the objects get converted to the appropriate type before they
+	 are used.
+	 <p>
+       <li> Restrictions on Java Generics
+	 <p>
+	 <ol>
+	   <li> You cannot declare generics with primitive types, although
+	     Java does auto boxing on primitive types to try to simplify
+	     your life. For example, the following declaration
+	     is illegal:
+     <pre>
+Pair&lt;int, char&gt; p = new Pair&lt;&gt;(8, 'a');  // compile-time error
+             </pre>
+	     However, the follow declaration is legal because Java will
+	     auto box the 8 into an Integer object and the 'a' into a
+	     Character object.
+	     <pre>
+Pair&lt;Integer, Character&gt; p = new Pair&lt;&gt;(8, 'a');
+	     </pre>
+	   <li> You cannot create instances of type parameters. For example,
+	     you cannot create an instance of E in the following code.
+<pre>
+public static &lt;E&gt; void append(List&lt;E&gt; list) {
+    E elem = new E();  // compile-time error
+    list.add(elem);
+}
+</pre>
+The reason for this restriction is because type erasure will
+replace E with its upper bound. Hence rather than creating an instance
+of E, you will create an instance of its upper bound, which is not what
+you intended.
+<p>
+  <li> You cannot create arrays of parameterized types. For example,
+    the following declaration is illegal:
+    <pre>
+      List&lt;Integer&gt;[] arrayOfLists = new List&lt;Integer&gt;[2];  // compile-time error
+    </pre>
+    The Java tutorial gives the following example to show why this declaration
+    could prove problematic if it were allowed:
+    <p>
+<blockquote>
+The following code works as you expect:
+<pre>
+Object[] strings = new String[2];
+strings[0] = "hi";   // OK
+strings[1] = 100;    // An ArrayStoreException is thrown.
+</pre>
+If you try the same thing with a generic list, there would be a problem:
+<pre>
+Object[] stringLists = new List&lt;String&gt;[2];  // compiler error, but pretend it's allowed
+stringLists[0] = new ArrayList&lt;String&gt;();   // OK
+stringLists[1] = new ArrayList&lt;Integer&gt;();  // An ArrayStoreException should be thrown,
+                                            // but the runtime can't detect it.
+</pre>
+If arrays of parameterized lists were allowed, the previous code would fail to throw the desired ArrayStoreException.
+</blockquote>
+You can work around this problem by using the original "raw type" generics:
+<pre>
+  List [] arrayOfLists = new List[2];
+</pre>
+You can now insert Integers into your lists and downcast them when
+you remove them.
+               </ol>          
+         </ol>
+        <li> C++ provides <a href="templates.html">templates</a>
+	  <ol>
+	   <li>Disadvantages
+	     <ol>
+	     <li> the code is very complicated to write, to debug, and to
+	          understand
+
+	     <li> a copy of the code must be created for each different type
+
+	     <li> templates cannot be compiled until they have been completely
+		expanded, which can make the error messages almost impossible
+		to read
+
+             <li> if the template requires that a certain method or operator
+		be supported (e.g., < or >), there is no way to explicitly
+		declare that requirement in the template, so the programmer
+		has to be aware that it is an "implicit" requirement. The
+		compiler will produce an error message if the instantiated
+		type does not include the necessary operation.
+             </ol>
+	    <li> Advantages: Supports both generic data structures and generic
+	      functions
+	    </ol> 
+	<li> C provides void *'s
+	   <ol>
+	   <li> The programmer can create generic data types by declaring values
+	      to be of type "void *". For example:
+<pre>
+struct Node {
+     void *value;
+     struct Node *next;
+};
+</pre>
+	      
+	   <li> The programmer can pass in type-specific functions (e.g.,
+	      comparator functions) that take void *'s as parameters and
+	      that downcast the void *'s to the appropriate type before
+	      manipulating the data. For example, this sample program has
+	      a generic min function that computes and returns the minimum
+	      of two elements. As an example, we are having the sample program
+	      compare two strings:
+<pre>
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+// generic min function
+void *min(void *element1, void *element2, int (*compare)(void *, void *)) {
+    if (compare(element1, element2) &lt; 0)
+	return element1;
+    else
+	return element2;
+}
+
+// stringCompare downcasts its void * arguments to char * and then passes
+// them to strcmp for comparison
+int stringCompare(void *item1, void *item2) {
+    return strcmp((char *)item1, (char *)item2);
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+	printf("usage: min string1 string2\n");
+	return 1;
+    }
+    
+    // call min to compare the two string arguments and downcast the return
+    // value to a char *
+    char *minString = (char *)min(argv[1], argv[2], stringCompare); 
+
+    printf("min = %s\n", minString);
+    return 0;
+}
+</pre>
+	   <li> Advantages
+	      <ol>
+	      <li> One copy of the code works with multiple objects
+	       
+	      <li> The approach supports both generic data structures and
+	           generic algorithms--Note that this approach cannot be used
+		   to support generic algorithms in Java since functions cannot
+		   be passed as pointers
+              </ol>
+	   <li> Disadvantages
+	      <ol>
+	      <li> Downcasting can be dangerous, even more so than in Java,
+	          since run-time type checks are not performed in C
+
+	      <li> The code often has a cluttered appearance 
+	      </ol>
+           </ol>
+    </ol>
+    <li> Both Java and C++ provide a set of generic data structures. 
+      <ol>
+      <li> C++ provides the standard template library (STL), which includes
+	   both templates for common data structures, such as lists and
+	   hash tables, as well as common algorithms, such as quicksort.
+
+      <li> Java provides a set of standard data structures, such as lists
+	   and hash tables, in its java.util package.
+      </ol>
+   </ol>

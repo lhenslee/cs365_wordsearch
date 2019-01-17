@@ -1,0 +1,677 @@
+<head>
+<link rel="stylesheet" type="text/css" href="cs365_notes.css" />
+<style>
+li { margin-top: 5px; }
+</style>
+</head>
+<center> <h1> Java Basics </h1> </center>
+
+<p>
+These notes present the basics of Java in outline form. They only discuss
+the ways in which Java differs from C++. If something is not discussed, such
+as for loops, if-then-else statements, or constructors, it is because they
+are identical in both C++ and Java. 
+<p>
+<hr>
+<ol>
+<li> Writing and executing your first Java program
+  <ol>
+  <li> Here's a very simple Java program:
+<pre>
+class HelloWorld {
+    public HelloWorld() {
+        System.out.println("Hello World");
+    }
+
+    static public void main(String args[]) {
+        new HelloWorld();
+    }
+}
+</pre>  
+  <li> You compile this program at the command line as follows:
+<pre>
+javac HelloWorld.java
+</pre>
+    <ol>
+    <li> The compiler creates a .class file for HelloWorld that contains 
+         <i>bytecodes</i>.
+    <li> bytecodes are the assembly language for Java's virtual machine
+    </ol>
+  <li> You execute this program at the command line as follows:
+<pre>
+java HelloWorld
+</pre>
+     <ol> 
+       <li> The <tt>java</tt> command invokes the java virtual machine (VM)
+       <li> HelloWorld tells the virtual machine that it can find a main
+	 method in the HelloWorld class and that it should start executing
+	 this method.
+       <li> You do not include the .class suffix. The java VM
+	 automatically appends this suffix to the filename.
+     </ol>
+     <li> Notes about main
+          <ol>
+          <li> main <i>must</i> go inside a class 
+          <li> main is declared as a static, public function that returns 
+               void. 
+          <li> main takes a single array of strings as an argument. The
+	       command line arguments are placed in this array.
+	      <p>
+		<ol>
+		  <li> Unlike C++, the first command line argument is at
+		    index 0. Java assumes that you know which class you're in
+		    and hence does not need to put that information at
+		    index 0 like C++ does.
+		  <li> Later in these notes you will see that it is possible
+		    to query an array for its length
+		</ol>
+          </ol>
+       <li> Notes about the style of this program
+	 <ol>
+	   <li> Note that the work of this program is done in the constructor
+	     for HelloWorld, rather than main. Although it is possible to
+	     put the code in main, it is not advisable to do so because
+	     you run into difficulties with calling functions. For example,
+	     suppose you want to write the following C++ program in Java:
+<pre>
+	   int sum(int x, int y) { return x + y; }
+	   int multiply(int x, int y) { return x * y; }
+
+	   int main(int argc, char *argv[]) {
+	      sum(3,6);
+	      multiply(9,5);
+	   }
+</pre>
+	   In Java, a comparable program should be written as:
+<pre>
+	   class Arithmetic {
+	     public Arithmetic() {
+	       sum(3,6);
+	       multiply(9,5);
+	     }
+
+	     int sum(int x, int y) { return x + y; }
+	     int multiply(int x, int y) { return x * y; }
+
+	     public static void main(String args[]) {
+	       new Arithmetic();
+	     }
+	   }
+</pre>
+	   A lot of novice Java programmers think this code is too complicated
+	   and try to write it more simply as:
+<pre>
+	   class Arithmetic {
+	     int sum(...)
+	     int multiply(...)
+
+	     public static void main(String args[]) {
+	       sum(3,6);
+	       multiply(9,5);
+	     }
+	   }
+</pre>
+	   The java compiler will complain about this code though because
+	   sum and multiply have not been declared static as well. If you
+	   call a function from a static function, then the called function
+	   must also be declared static. The reason is that non-static
+	   functions expect a pointer to an object to be passed to them via
+	   the <b>this</b> variable. However, static functions like main don't
+	   have objects associated with them and hence cannot pass a reference to
+	   an object to a non-static function. Trying to keep track of all
+	   the function calls made from a static function becomes tiresome,
+	   and hence it is best to simply move the code that typically 
+	   appears in main to a constructor instead, and then invoke that
+	   code by having main create a single instance of the class.
+     </ol>
+   </ol>
+<p>	     
+
+<li> Scope rules
+    <ol>
+    <li> A variable may be declared within
+       <ol>
+       <li> a class
+       <li> a method
+       <li> a block
+       <li> a statement
+       </ol>
+
+    <li> A variable may not be declared anywhere outside a class (i.e., there
+       are no global variables in Java)
+
+    <li> A variable that is declared within a block cannot have the same
+        name as a variable in an enclosing block or method. This rule is
+	different from C/C++ where a variable may have any name when it is
+	declared within a block.
+        <p>
+	<ol>
+        <li> Example: The following code will cause the Java compiler to
+	 generate an error message because <i>j</i> is declared
+	 both in the body of the method and in the body of the
+	 for loop:
+<pre>
+	 int countPositive(int [] a) {
+	     int count = 0;
+	     int i, j;
+
+	     for (i = 0; i < a.length; i++) {
+	         int j = a[i];
+		 if (j > 0) count++;
+	     }
+             j = a.length - count;
+	     System.out.println("number of negatives = " + j);
+	     return count;
+	 }
+</pre>
+         <li> It is okay to have two identical variable declarations in the
+            same block, as long as they are not nested. For example, the
+            following code is valid:
+<pre>
+          int countPositive(...) {
+             ...
+             for (int i = 0; i < 10; i++) {
+		 ...
+	     }
+             for (int i = 20; i > 10; i--) {
+		 ...
+	     }				 
+	  }
+</pre>
+         </ol>
+     <li> Once a variable goes out of scope it is undefined. Hence if I had
+	only declared j in the block which is inside the for loop in the
+	above code (and also not declared it outside the block), j would
+	not be accessible outside the block.
+     </ol>
+<p>
+<li> Java's built-in types
+   <ol>
+   <li> boolean -- true/false
+   <li> char -- character
+   <li> byte -- 8 bit integer
+   <li> short -- 16 bit integer
+   <li> int -- 32 bit integer 
+   <li> long -- 64 bit integer
+   <li> float -- 32 bit floating point number 
+   <li> double -- 64 bit floating point number 
+   </ol>
+
+<li> Type conversions and type comparisons
+    <ol>
+    <li> Java automatically performs a type conversion if the conversion does
+        not entail a loss of precision. For example, Java will convert an
+	int to a double:
+    <pre>
+	int a;
+	double b;
+
+	b = a; // okay because there is no loss of precision
+    </pre>
+    <li> Java will generate an error message if the type conversion would
+        entail a loss of precision:
+    <pre>
+	a = b; // not okay because the fractional portion will be lost when
+	       // b's value is assigned to a
+    </pre>
+        <ol>
+	<li> In C++ such a conversion will only generate a warning message
+	</ol>
+
+    <li> The programmer may explicitly downcast (also called <i>narrowing</i>)
+        one type to a less precise type, in which case Java will perform
+	a pre-defined narrowing operation:
+<pre>
+	a = (int) b; // okay. Java will truncate the fractional part of b's
+	             // value and assign it to a
+</pre>
+    <li> The <b>instanceof</b> operator allows you to test whether an object
+	is of a specified class or array type. The operator returns true
+	if the comparison type is either the object's type or a superclass
+	of the object's type. For example, if Stack is a subclass of
+	LinkedList, then if b is a Stack, then:
+<pre>
+	 b instanceof Stack
+	 b instanceof LinkedList
+	 b instanceof Object
+</pre>
+	 are all true. A way of seeing why this makes sense, is that you
+	 typically ask if an object is an instance of something because
+	 you want to either cast to that type, or because you want to
+	 use a certain method. It is always safe to lose "precision" by
+	 casting to a superclass object, which is a less precise object.
+    </ol>
+
+<li> The String class--String is a Java-provided class
+
+    <ol>
+    <li> Strings are immutable--once they are created, their contents cannot
+       be changed
+<pre>
+       Example:  String a = "Hello";
+                 a = a + " World";
+</pre>
+		 In this example, the concatenation operation creates a
+		 completely new string to hold "Hello World" and then makes
+		 <i>a</i> point to the new string. The old string object
+		 remains unaltered with its contents still being "Hello".
+		 Since no other variables point to it, it is eventually
+		 garbage collected.
+
+    <li> Strings should be compared using either a string's <b>equals</b> 
+	or <b>compareTo</b> method. If you try to use the relational
+	operators they will compare the strings' memory addresses
+	rather than their values.
+
+        <ol>
+	<li> a.equals(b): returns true/false depending on whether the two strings
+		match
+
+	<li> a.compareTo(b) returns a negative number, 0, or a positive number
+		depending on whether a &lt; b, a = b, or a &gt; b.
+
+        <li>Example: 
+<pre>
+               String token;
+               String day = "Wednesday";
+               ...
+	       if (token.equals("+")) ...
+	       else if (token.equals(day)) ...
+</pre>
+       </ol>
+
+    <li> Use a <i>StringBuilder</i> or <i>StringBuffer</i> object if you 
+	want to modify/edit a string
+        <p>
+	<ol>
+	<li> StringBuilder is designed to be used with single threaded
+		applications and is faster than StringBuffer
+	<li> StringBuffer works with multiple threaded applications. 
+	<li> The two classes are interchangeable, in the sense that they
+		support the same interface
+	</ol>
+    </ol>
+<li> Enumerated Types: Java 1.5 introduced a sophisticated mechanism for
+     <a href="http://java.sun.com/docs/books/tutorial/java/javaOO/enum.html">enumerated types</a>. Follow the link to read Sun's documentation. Some
+     salient features of Java's enumerated types are that:
+     <ol> 
+     <li> An enumerated type is actually a class and each enumerated constant
+        is an object. 
+        <ol>
+        <li> Because enumerated types are classes, they can be declared 
+           independently of any class, and placed in their own .java file
+        </ol>
+
+     <li> An enumerated type may associate values with each enumerated
+        constant using a constructor and then declaring accessor methods
+        that allow a user to query for these values. 
+       <ol>
+       <li> See the planets example in the Java documentation for a detailed 
+           example.
+       <li> As another example of associating values with enumerated constants,
+           you might want to associated point sizes with enumerated constants
+           for font sizes. For example, small might be a 9 point font, medium
+           a 12 point font, large a 24 point font, and so on.
+       </ol>
+    </ol>
+
+<li> Arrays: They are objects, not primitive types
+   <ol>
+   <li> Must be explicitly allocated using the new operator
+   <li> The declaration uses empty brackets since the size of the array
+        is not known until it is allocated.
+        <ol>
+	<li> The brackets can be either after the type name or after the
+	    variable name
+<pre>
+	e.g., int a [];
+	      int [] b;
+	      int c [] = new int[6];
+	      int [] d = new int[10];
+</pre>
+	<li> You can also provide a set of items to initialize an array, in
+	   which case <b>new</b> is not required:
+<pre>
+	   String weekdays [] = {"Monday", "Tuesday", "Wednesday",
+	                         "Thursday", "Friday"};
+</pre>
+       </ol>
+    <li> A common error is to allocate an array of objects and
+	assume that the objects now exist. That would be true in
+	C++ but not in Java, since Java only supports heap-allocated
+	objects. When you write:
+<pre>
+Person students[] = new Person[10];
+</pre>
+  	you do not have an array of 10 Person objects like you would
+	in C++. You have an array of 10 <b>null</b> pointers. If
+	you now write a statement such as:
+<pre>
+students[2].name = "Brad";
+</pre>
+	then Java's virtual machine will throw a null pointer exception
+	because students[2] is <tt>null</tt>, not a Person object. If
+	you want the array to be initialized to 10 Person objects,
+	then you must explicitly assign Person objects to each
+	entry:
+<pre>
+for (i = 0; i &lt; students.length; i++) {
+    students[i] = new Person();
+}
+</pre>
+    <li> The <b>length</b> field returns the number of elements
+<pre>
+        e.g., System.out.println(c.length) will print 6
+</pre>
+    <li> Multi-dimensional arrays are arrays of arrays
+<pre>
+        e.g., int a [][] = new int[4][5];
+	      int b [][] = new int[4][];
+	          b[0] = new int[5];
+		  b[1] = new int[4];
+		  ...
+</pre>
+    <li> For Each: Java 1.5 introduces a nifty construct for iterating through
+	a collection of objects, such as an array:
+<pre>
+	e.g., int[] arrayOfInts = { 32, 87, 3, 589, 12, 1076, 2000, 8, 622 };
+	      int sum = 0;
+              for (int element : arrayOfInts) {
+	      	sum += element;
+	      }
+</pre>
+	You must declare <tt>element</tt> in the for statement. If you try to declare
+	<tt>element</tt> outside the for statement, you will get a compiler
+	error message.
+   </ol>
+<li> Classes
+   <ol>
+   <li> There is a special Java class called <i>Object</i> that is the
+        root of the Java class hierarchy. All classes ultimately have
+	Object as their superclass. If an object is declared without a
+	superclass, then Object is its direct superclass.
+       <ol>
+       <li> Having a unifying object at the top of the class hierarchy
+	allows Java to define generic collection classes, such as lists, trees,
+	and hash tables, that can contain any collection of objects, since
+	ultimately all objects are of type Object. For example:
+<pre>
+class List {
+    public void insertAfter(Object referenceObj, Object objToInsert);
+    public Object getHead();
+    public Object getTail();
+    ...
+}
+</pre>
+       </ol>
+   <li> Variables whose types are classes cannot be allocated on the stack.
+       In other words, Java does not allow value objects. All objects are
+       allocated from the heap by calling <b>new</b>.
+       <ol>
+       <li> Java does not have a concept of pointers. When you create an
+           object and assign the result to a variable, Java does indeed
+	   assign a pointer to the object to the variable, but you do
+	   not have access to the pointer like you do in C++ (e.g., in C++
+	   you can increment or decrement a pointer). 
+
+       <li> All member accesses are performed via the dot (.) operator
+
+       <li> When an assignment statement such as <i>a = b</i> is executed,
+           <i>a</i> is made to point to the same object to which <i>b</i>
+	   points. If <i>a</i> modifies a member of this object, then
+	   <i>b</i> will also appear to change. For example:
+<pre>
+	   Stack a;
+	   Stack b = new Stack();
+	   b.push(3);
+	   a = b;
+	   a.push(5); // b's stack now contains both 3 and 5
+</pre>
+           <ol>
+	   <li> this treatment is different than in C++ where <i>a</i> would
+	      receive a copy of <i>b's</i> object because <i>a</i> and <i>b</i>
+	      would both be value objects. In C++, <i>a's</i> stack would 
+	      contain 3 and 5 after the push operation but <i>b's</i> stack
+	      would only contain 3.
+           </ol>
+       <li> The == operator compares pointers, not the contents of two objects.
+          We say that the == operator performs a <i>shallow</i> comparison,
+	  rather than a <i>deep</i> comparison. This comparision of pointers
+	  is why you need to use a string's equals method to compare the
+	  values of two strings.
+       <li> All objects have a <i>equals</i> method that you can use to
+	compare two objects. 
+	<ol>
+        <li> It returns true/false depending on whether or
+	not they are equal. 
+        <li> The Java built-in classes, such as arrays and
+	strings, pre-define this method. 
+        <li> You must provide your own declaration
+	for it in your user-defined classes, or else the default implementation
+	will use pointer comparison (==) to determine if the two objects are
+	equal.
+        </ol>
+       </ol>
+    <li> Declaration of instance variables in a class: Unlike C++, you may
+        assign a default value to a variable when it is declared. Java
+	will assign this value to the variable before the object's constructor
+	is called. 
+<pre>
+	Example: class Stack {
+	            int size = 10;
+		    int top = 0;
+		    ...
+		 }
+</pre>
+       <ol>
+       <li>  To accomplish the same type of initialization in C++ you
+		 would have to ensure that every constructor explicitly
+		 performed this initialization or called a method that
+		 performed this initialization.
+
+       <li> Since the initializer code is run each time an instance is created,
+	   	the initialization code may involve function calls, but it
+	 	may not depend on values that are passed into the constructor,
+		since the initialization statements are executed before the
+		constructor is executed.
+      </ol>
+    <li> Initialization blocks: You can use an unnamed block, called an
+        initialization block, to perform initialization actions on a
+        class's members, before the constructor is called. 
+       <ol>
+       <li> If you create an initialization block, then it will also be called 
+           when an object is first created
+
+       <li> The code in the initialization block is executed after the default
+           values are assigned to variables but before the constructor is 
+	   called. It is helpful when something more complicated than a 
+	   single line initialization has to be performed, such as the
+	   assigning of computed values to array elements.
+
+       <li> Example: 
+<pre>
+                   class RandomValues {
+	   		int randomNums[] = new int[10];
+			// Initialization block
+			{
+			  for(int i=0; i&lt;randomNums.length; i++)
+			  {
+			    randomNums[i] = (int)(100.0*Math.random());
+		          }
+                        }
+		    }
+</pre>
+       <li> Initialization blocks are in effect copied into each constructor for
+	  that class. Hence it provides a way for constructors to share a
+	  generic piece of code. In C++ you would accomplish the same sharing
+	  by placing the generic code in the 0-argument constructor and then
+	  making each constructor explicitly call the 0-argument constructor.
+	  This approach has two drawbacks. First, you might not want to 
+	  provide a public 0-argument constructor (so then you have to go to
+	  the trouble of protecting the 0-argument constructor). Second, you
+	  have to remember to call the 0-argument constructor in each
+	  constructor. That may not be hard to remember to do when the class
+	  is first created, but a maintainer of the class might not know that
+	  fact and inadvertently add a new constructor that does not call the
+	  0-argument constructor and hence does not perform some important
+	  initialization.
+        </ol>
+    <li> Static keyword: declares a variable to be a <i>class</i> member.
+        <ol>
+	<li> A static variable is essentially a global variable for that class
+	   and all instances of that class share its value. 
+	<li> There is only one copy of the variable and it is stored with the
+	   class rather than with an instance
+<pre>
+	   Example:  static String color = "red";
+</pre>
+
+    <li> static blocks: static blocks are similar to initialization blocks
+        but are proceeded by the keyword <b>static</b>
+       <ol>
+       <li> they are called when the class is first loaded and can
+           be used to initialize static members
+
+       <li> this treatment differs from C++ in which a static member must be
+           declared and initialized in a .cpp file as well as being declared
+	   in a .h file.
+       </ol>
+    </ol>
+    <li> Access protections: Java provides public, protected, private, and
+         package level protection
+      <ol>
+        <li> protected/private/package level protection will be discussed
+	  further when we get to packages
+	<li> default access protection is package level protection, which
+	  will be discussed in a later set of notes. When you're only dealing
+	  with a single class, as we will be for the first few lectures,
+	  then package level protection mimics private protection in C++.
+        <li> public makes a member world readable. Unlike in C++, you must
+	  preface each member you want to make public with the public keyword.
+	  For example:
+<pre>
+class Point {
+    public double x;
+    public double y;
+}
+</pre>
+      </ol>
+    <li> Finalize method: replaces C++'s destructor and is only needed to
+       release non-Java resources, such as a file handle
+       <ol>
+       <li> signature: void finalize() {...}
+       <li> is called by the garbage collector when the object is finally
+	   destroyed
+       <li>  cannot count on when it will be called because you cannot count
+	   on when the object will be garbage collected
+          <ol>
+	  <li> if you need to ensure that a final set of actions is performed
+	      on an object, create your own method and then call it when
+	      you are ready to release the object
+
+	  <li> do <b>not</b> call finalize yourself since it will also get
+	      called by the garbage collector. Doing so may cause your
+	      program to try to release the same set of resources twice, and
+	      the second time you won't own them anymore. Trying to release
+	      resources you don't own could create unpredictable results.
+          </ol>
+       </ol>
+    <li> Nested classes: Classes can be nested inside a Java class just as
+        in C++
+        <ol>
+        <li> A nested class has access to all the members and methods of its 
+	    enclosing class
+
+	<li> An instance of a nested class is associated with the instance of
+	    the class which creates it. A nested class cannot be created
+	    independently of its outer class
+<pre>
+	    e.g., class foo {
+	            ...
+		    public class goo { ... }
+		  }
+</pre>
+		  foo.goo a = new foo.goo() will fail because a goo can only
+		  be created by an instance of a foo
+	 <li> The compiled class name for the inner class will be
+	     OuterClassName$InnerClassName.class. For example, goo
+	     will be compiled to foo$goo.class.
+         </ol>
+    <li> <b>final keyword</b>: Java's way of creating a constant
+       <ol>
+       <li> Example
+<pre>
+final double SALES_TAX = 0.05;
+</pre>
+       <li> Memory for the final keyword is shared by all instances so you
+	   do not have to declare them static.
+       <li> If you want the constant to be accessible outside the class, you
+           must declare it both public and static.
+       </ol>
+   </ol>
+<li> Parameter passing
+   <ol>
+   <li> Java uses pass-by-value, not pass-by-reference
+
+   <li> Can return objects since they're allocated off the heap
+
+   <li> Passing a reference to an object allows the method to modify
+	     the contents of the object. This may seem like a contradiction
+	     to the pass-by-value dictum but if you think about it, it
+	     makes sense. The reference value (i.e., pointer value) gets
+	     copied, and hence the parameter has a pointer to the same object
+	     as the argument
+
+   <li> C++ uses both pass-by-value and pass-by-reference
+       <ol>
+       <li> Place an ampersand (&) after the type in a parameter declaration
+	        to make the parameter a reference parameter:
+<pre>
+		void swap(int &a, int &b) {
+		    int temp = a;
+		    a = b;
+		    b = temp;
+		}
+
+		actual call: swap(x, y);
+</pre>
+        <li> When C++ sees a reference parameter, it passes a pointer to
+	        the argument rather than a copy of the argument to the
+		method. 
+            <ol>
+	    <li> When you assign a value to a reference parameter, the value
+		    is assigned to the argument's memory location, thus
+		    modifying the original argument
+         
+	    <li> When you access a reference parameter on the right side
+		     of an assignment statement, C++ return's the current
+		     value at the argument's memory location
+            
+	    <li> Reference parameters were introduced into C++ to reduce
+	        the need to explicitly pass addresses of arguments to
+		methods and to explicitly dereference parameters in methods.
+		Compare how swap must be implement and called using the
+		pass-by-value method as compared to the pass-by-reference
+		method:
+<pre>
+		void swap(*int a, int *b) {
+		    int temp = *a;
+		    *a = *b;
+		    *b = temp;
+		}
+
+		actual call: swap(&x, &y)
+</pre>
+		As you can see, there are many more opportunities to introduce
+		an error when you have to explicitly take the address of
+		arguments and dereference parameters.
+
+	    <li> Unfortunately, in practice reference parameters are confusing
+	        to use and the designers of Java decided to do away with
+		them. Note however that because of the way Java copies 
+		reference values to parameters, Java really is doing 
+		a form of pass-by-reference for objects.
+            </ol>
+       </ol>
+   </ol>
+</ol>

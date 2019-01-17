@@ -1,0 +1,268 @@
+<head>
+<style>
+ol { list-style-type: upper-roman; }
+ol ol { list-style-type: upper-alpha; }
+ol ol ol { list-style-type: decimal; }
+ol ol ol ol { list-style-type: lower-alpha; }
+ol ol ol ol ol { list-style-type: lower-roman; }
+ol ol ol ol ol ol { list-style-type: decimal; }
+ol ol ol ol ol ol ol { list-style-type: lower-alpha; }
+ol ol ol ol ol ol ol ol { list-style-type: lower-roman; }
+</style>
+</head
+<center>
+<h1> Garbage Collection </h1>
+</center>
+<hr>
+Garbage collection is a process by which a run-time environment automatically
+de-allocates and reclaims ununsed memory. Garbage collection 
+represents a trade-off between increased code robustness
+and decreased code efficiency. By freeing the programmer of the obligation
+to explicitly de-allocate memory, garbage collection avoids dangling references
+caused by prematurely de-allocated memory and memory leaks caused by failing
+to de-allocate memory when the last pointer to the object is obliterated.
+Dangling references are among the most difficult and costly error to
+detect, so eliminating them can considerably speed up code development and
+increase the robustness of the code.
+<p>
+However, garbage collection requires a considerable amount of bookkeeping
+and is famously associated with pauses in a program while garbage collection
+is performed. Additionally, programmers typically know when an object is
+no longer needed and can be de-allocated. A programmer can manually de-allocate
+an object much more directly and efficiently than a garbage collector, thus
+leading to faster code.
+<p>
+Garbage collection algorithms fall into two broad categories: reference
+counting and tracing collection. The rest of these notes explores these
+algorithms in more detail.
+<ol>
+<li> Reference Counting
+  <ol>
+    <p>
+	    <li> Description: Keeps track of the number of pointers that
+	       reference each block of memory in the heap and adds a block
+	       of memory to the free list when its reference count drops to 0
+	      <ol>
+	      <li> each memory block contains a four byte field which counts
+	          the number of references to this block
+		 <p>
+	      <li> the compiler inserts statements that increment or decrement
+	          reference counts around program statements that perform
+		  pointer variable assignment
+<pre>
+		  Example:                                     Reference Counts
+		                                                "Hello" "World"
+		             String a = new String("Hello");       1       0
+		             String b = new String("World");       1       1
+			     b = a;                                2       0
+			     
+			     After the assignment of a to b, the string object
+			     containing "World" gets garbaged collected
+</pre>
+            </ol>
+	      <p>
+	    <li> Advantages
+	      <p>
+	        <ol>
+		<li> the cost of garbage collection is distributed uniformly
+		   over a program's execution so there is never an irritating
+		   pause in program execution
+		</ol>
+		<p>
+	    <li> Disadvantages
+	      <p>
+	      <ol>
+	      <li> reference counting statements must be added before and
+		   after every program statement that performs a pointer
+		   assignment. These statements can increase the cost of
+		   a pointer assignment by a factor of 3.
+	       <li> reference counting cannot garbage collect circular 
+	           structures
+	      <li> every block of memory must have an extra four bytes that
+	           are devoted to reference counting. 
+	      <li> assumes a strongly typed language because the compiler
+		   needs to know what to do with a pointer that references
+		   a field in the middle of a memory block (i.e., it needs to
+		   be able to generate code that finds the reference count
+		   for the memory block and increments/decrements it
+		   appropriately)
+	      </ol>
+	    </ol>
+<hr>
+<li> Tracing Collectors: Tracing collectors work by marking objects as
+  either usable or un-usable and reclaiming un-usable objects
+  <p>
+    <ol> 
+      <li> Mark and Sweep
+	<p>
+	   <ol>
+	     <li> Description: A three step method that is periodically
+	         invoked to determine which objects in the heap are not
+		 referenced by any chain of pointers that originates from
+		 outside the heap (i.e., from a pointer currently on the
+		 stack or from a global variable).
+	         <p>
+		 <ol>
+		 <li> Step 1: Walk through the heap and mark every block as
+		   "useless"
+		 <p>
+		 <li> Step 2: For each pointer outside the heap do a depth-first
+		   search and mark all blocks that are encountered as
+		   "useful." (when the collector reaches a block already
+		   marked as "useful" it knows it has reached the block
+		   via some other path and can stop recursing) Doing a 
+		   depth-first search means having to recurse into structures.
+		   For example, suppose we are given the following class
+		   and variable declarations:
+		   <pre>
+		   class ListNode {           class List {
+		       ListNode *next;	          ListNode *head;
+		       ListNode *prev:		  ListNode *cursor;
+		       int value;             };
+		    };
+
+		    List *a;
+		   </pre>
+		    When we follow a's pointer, we must recurse into List
+		    and follow List's head and cursor pointers. Similarly
+		    when we follow the head and cursor pointers, we will
+		    have to recurse into ListNodes and follow their *next
+		    and *prev pointers.
+		   <p>
+		 <li>Step 3: Walk through the heap again and move every block
+		   still marked as "useless" to the free list
+		 </ol>
+	<p>
+            <li> Advantages
+	      <p>
+	      <ol>
+	        <li> requires less overhead than reference counting since it
+		   is only called when free memory is exhausted
+	
+	        <li> garbage collects circular structures
+	      </ol>
+	     <p>
+	    <li> Disadvantages
+	      <p>
+		<ol>
+	        <li> can cause long annoying pauses when garbage collection
+		   occurs. Since garbage collection typically occurs when
+		   free memory is exhausted, a great deal of memory must be
+		   typically searched. Hence the garbage collection process
+		   can take a noticeable period of time and can disrupt the
+		   interactivity of an application. There are some incremental
+		   garbage collectors that interleave their execution with
+		   the program, thus amortizing the cost of their execution.
+		   These garbage collectors lead to somewhat slower overall
+		   execution times, because of thread switching and more
+		   bookkeeping, but can dramatically reduce the length of
+		  the pauses.
+		<p>
+	       <li> requires a strongly typed language and each memory block 
+		 must start with a pointer to a type descriptor. The reason
+		 a type descriptor is required is that if the object contains
+		 pointer fields, then the garbage collector must recursively
+		 follow these pointer fields, and the type descriptor will
+		 tell the garbage collector where in the object these pointer
+		 fields are located. 
+		 <p>
+	       <li> the algorithms can be fairly tricky to implement. For
+	           example, since garbage collection is initiated when free
+		   memory is exhausted, there will not be a great deal of
+		   space to store the stack required for depth-first search.
+		   Hence many algorithms reverse the pointers as they 
+		   traverse the heap so that they can return to their 
+		   previous block when they finish recursing (see Fig 7-14
+		 in the Scott book if you have it)
+	       </ol>
+	    </ol>
+    <p>
+    <li> Stop-and-Copy
+      <p>
+	<ol>
+	  <li> Description: A technique that can eliminate memory fragmentation
+	    by compacting storage. It divides the heap into two halves of equal
+	    size and does all its allocation in one half. When this half fills up,
+	    it copies the usable memory to the other half, compacts the storage,
+	    and patches up pointers. Although it may seem that dividing the heap
+	    in half cuts memory in half, that is not really the case since modern
+	    processes use virtual memory that gets mapped to physical memory. Hence
+	    you're really only halving virtual memory, which you can make quite
+	    large using current disk sizes.
+	  <p>
+	    <li> Detailed Algorithm
+	      <p>
+	      <ol>
+		<li> When a half is nearly full, the collector starts its
+		  exploration of reachable data structures. Each reachable
+		  block is copied into the second half of the heap, with no
+		  external fragmentation
+		<li> The old version of the block, in the first half of the
+		  heap, is overwritten with a "useful" flag and a pointer
+		  to the new location.
+		<li> Any pointer that refers to the same block and that is
+		  found later in the exploration is updated to point to the
+		  new location.
+	      </ol>
+	    <p>
+	    <li> Advantages
+	      <p>
+		<ol>
+		  <li> Eliminates memory fragmentation
+		  <li> Eliminates steps 1 and 3 of mark-and-sweep
+		</ol>
+	     <p>
+	    <li> Disadvantage: Halves the heap size, although as noted earlier,
+	      it only really halves virtual memory heap size
+	    </ol>
+<p>
+         <li> Generational Collectors
+	   <p>
+	     <ol>
+	       <li> Key Observation: Most dynamically allocated objects
+		 are short-lived, so they can be placed in a "nursery"
+		 region and garbage collected more quickly
+	       <p>
+	       <li> Detailed Description
+		<p>
+		  <ol>
+		    <li> Memory is divided into multiple regions, often just
+		      two, with one region being the nursery region and one
+		      being the long-lived region
+		    <li> When space runs low, the garbage collector garbage
+		      collects the nursery region. If not enough space can
+		      be reclaimed in the nursery region, it garbage collects
+		      successively higher regions, thus weeding out older
+		      lived blocks that have become un-usable. 
+		    <li> After some number of collections, frequently just one,
+		      blocks get promoted from their region to the next older
+		      region in a manner similar to stop-and-copy.
+		    <li> One complication is that there may be pointers from
+		      the older regions to the newer regions and we don't want
+		      to exhaustively search the older regions to update 
+		      pointers when newer objects are promoted. To handle this
+		      case, the compiler must generate code at each pointer
+		      assignment to check whether the new pointer is an
+		      old-to-new pointer. If so, it adds the pointer to a hidden
+		      list accessible to the collector. This instrumentation
+		      on assignment is known as a <i>write barrier</i>. In
+		      general the list of old-to-new pointers is fairly short,
+		      since it is relatively rare for an older object to point
+		      to a newer object. 
+		    </ol>
+		  <p>
+		  <li> Advantage: Decreases the length of pauses by garbage
+		    collecting smaller regions
+		  <p>
+		  <li> Disadvantage: Much more complicated and can slow
+		    down overall execution by requiring the instrumentation
+		    of pointer assignments. However, the instrumentation is
+		    pretty cheap. The nursery starts at a known region in 
+			memory that ends with a bunch of 0's (e.g., 0x80000000)
+			so right shift the pointer to obtain the high order
+			bits of the pointer and then do a fast comparison. If
+			the right shifted pointer is less than the start of
+			the nursery, the pointer is into the older generations
+			and otherwise is into the nursery.
+  
+      

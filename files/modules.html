@@ -1,0 +1,308 @@
+<head>
+<style>
+table.code {
+  border:1px;
+  text-align: left;
+}
+table.code td { padding:3px;
+   vertical-align: text-top;
+} 
+
+</style>
+<center>
+<h2>Modules</h2>
+</center>
+<hr>
+Modules provide a way to allow several related files to share the details
+of their implementation while hiding this implementation from the outside
+world. Modules provide an added layer of flexibility to classes in the way 
+of access protection. These notes outline the differences in data encapsulation
+afforded by C, C++, and Java.
+<p>
+<hr>
+<h2> Module Mechanisms in C: Void *'s </h2>
+<p>
+C has a very weak form of data encapsulation that is provided via the 
+generic <tt>void *</tt> pointer and the ability to declare that a struct
+is local to a file. Suppose I want to declare a <b>Stack</b> data type in
+C and I want to hide its implementation, including its data structures, from
+users. I can do this by first defining a public file called <tt>Stack.h</tt>
+that contains my generic Stack data type and the functions that the stack
+data type supports:
+<pre>
+Stack.h:
+    typedef void * Stack;
+    Stack stack_new(int size);
+    void stack_free(Stack s);
+    void stack_push(Stack s, int value);
+    int stack_pop(Stack s);
+</pre>
+Note that I have prefaced all my function names with the "stack_" prefix so
+that I can avoid name conflicts with user selected names. C++ and Java have
+ways to avoid these name conflicts and they will be discussed later.
+<p>
+Next I create my <tt>stack.c</tt> file that contains the implementation for
+my stack data type:
+<pre>
+#include "stack.h"
+#include &lt;stdlib.h&gt;
+
+typedef struct {
+   int size;
+   int *data;
+   int top;
+} myStack;
+
+Stack stack_new(int size) {
+   myStack *newStack = (myStack *)malloc(sizeof(myStack));
+   newStack-&gt;size = size;
+   newStack-&gt;data = (int *)malloc(sizeof(int) * size);
+   newStack-&gt;top = 0;
+   return (Stack)newStack;  /* cast myStack to a (void *) */
+}
+
+void stack_push(Stack s, int value) {
+   myStack *stack = (myStack *)s;
+   if (stack-&gt;top == stack-&gt;size) return;  /* should really do error handling */
+   stack-&gt;data[stack-&gt;top] = value;
+   stack-&gt;top++;
+}
+...
+</pre>
+Since <tt>myStack</tt> is declared locally and is not declared extern
+in the <tt>stack.h</tt> file, its scope is limited to <tt>stack.c</tt>.
+Hence only the functions in <tt>stack.c</tt> can manipulate the <tt>myStack</tt>
+data structure. The user is handed a <tt>(void *)</tt> which effectively
+hides a stack's implementation because there is no way for the user to
+cast the <tt>(void *)</tt> to a <tt>myStack</tt>. Whenever the user wants
+to manipulate the stack the user passes a <tt>(void *)</tt> to the appropriate
+stack function. The stack function can cast this <tt>(void *)</tt> to a
+<tt>myStack</tt> struct and manipulate the stack in any way it wishes. 
+<p>
+This form of data encapsulation using <tt>void *'s</tt> is fairly kludgy but
+it does allow several files to share their implementation, as long as each
+file declares its local data structures in exactly the same way. For example,
+I could spread the stack implementation over two files by declaring a
+<tt>myStack</tt> struct locally in both files. The obvious drawback to this
+approach is that instead of having one central declaration for the stack's
+data structures I have one declaration per file, which makes it much more
+difficult and error-prone to change the data structures. 
+<p>
+A positive aspect of the <tt>void *</tt> implementation is that you can
+hand a binary implementation to a third party without divulging any proprietary
+implementation knowledge because the third party will only see the 
+<tt>void *</tt> in the .h file. Hence the third party will not even know
+what data structures you are using.
+<p>
+<hr>
+<p>
+<h2> Module Mechanisms in C++: Friends and Namespaces </h2>
+<p>
+The <tt>public</tt>, <tt>protected</tt>, and <tt>private</tt> accessors
+in C++ provide a way to control access to the implementation of a class.
+Unfortunately, these accessors are "all" or "nothing" accessors, they either
+let everyone access the implementation or only subclasses to access the
+implementation. They do not provide a way to say "let classes A, B, and C
+have access to each other's implementation, but exclude everyone else."
+<p>
+C++'s developers partially address this problem by providing the
+<tt>friend</tt> keyword. 
+A class can declare that other classes are its friends, which allow
+          the other classes to examine the protected and private instance
+	  variables of the class. For example:
+<pre>
+	  class ListNode {
+	     friend class List;
+		...
+	  };
+</pre>
+This declaration gives any method in <tt>List</tt> the ability to examine
+any variable in <tt>ListNode</tt> and to call any method in <tt>ListNode</tt>,
+regardless of whether or not the access protection is public.
+<p>
+Friendship has a number of klunky disadvantages. First it is not two way. 
+When you declare List to be ListNode's
+           friend, ListNode does not become a friend of List. List must
+	   explicitly declare ListNode to be a friend before the friendship
+	   becomes two way.
+Second, subclasses do not inherit a superclass's friendship status.
+For example, suppose you have the following subclass declaration:
+<pre>
+           class DList : public List { ... }
+</pre>
+DList is not considered a friend of ListNode, despite the fact that it is
+a subclass of a friend of ListNode. 
+<p>
+These restrictions are incredibly annoying and really limit
+the effectiveness of friends in C++. First, if you want classes A, B, and C
+to share their implementation, you must ensure that all the classes mutually
+refer to each other as friends. Second, if you want their subclasses to
+also be friends, which invariably you do, then you have to make sure that
+the subclasses mutually refer to each other as friends. In general, if you
+want <i>n</i> classes to be friends, you will need <i>n(n-1)</i> friend
+declarations. In addition, if you add a new class to the system that should
+be included amongst the friends, then you must remember to add <i>2n</i> more
+friend declarations. What a mess! 
+<p>
+The second module-related concept in C++ is that of <b>namespace's</b>.
+The <tt>namespace</tt> keyword allows a
+programmer to specify that a certain set of variables, functions, and 
+classes belong to the same library or "module". 
+For example, a programmer might write:
+<pre>
+namespace ibm {
+    class Stack { ... };
+    class List { ... };
+    class ListNode { ... };
+    class Consult { ... };
+    ...
+}
+
+namespace apple {
+    class Stack { ... };
+    class List { ... };
+    class ListNode { ... };
+    class Cut { ... };
+    ...
+}
+</pre>
+Notice that the same set of names have been re-used, but since they are
+in two different namespaces, that is ok. There are three common ways to
+access members of a namespace:
+<ol>
+<li> On an as-needed basis with the :: operator: 
+<pre>
+ibm::Stack *s = new ibm::Stack();
+</pre>
+<p>
+<li> Importing specific members into the current namespace 
+with the <b>using</b> keyword:
+<pre>
+using ibm::Stack;
+
+Stack *s = new Stack();
+</pre>
+<li> Importing all members into the current namespace with the
+<b>using</b> keyword:
+<pre>
+using namespace ibm;
+
+Stack *s = new Stack();
+</pre>
+</ol>
+<p>
+If you import conflicting names into the same namespace it is problematic
+only if you try to use that name:
+<pre>
+using namespace ibm;
+using namespace apple;
+
+Consult *c = new Consult();  // ok--no name conflict
+Stack *s = new Stack();      // compiler error because of a name conflict
+</pre>
+Namespaces can span one or more files, so you can still place declarations
+in a .h file and definitions in a .cpp file. 
+For example, to declare the
+methods for ibm's Stack class one could use any of the following three styles
+in an ibm.cpp file:
+<table border class="code">
+<tr>
+<td>
+<pre>
+#include "ibm.h"
+using namespace ibm;
+
+int Stack::pop() { ... }
+...
+</pre>
+</td>
+<td>
+<pre>
+#include "ibm.h"
+
+int ibm::Stack::pop() { ... }
+...
+</pre>
+</td>
+<td>
+<pre>
+#include "ibm.h"
+
+namespace ibm {
+   int Stack::pop() { ... }
+   ...
+}
+</pre>
+</td>
+</tr>
+</table>
+<p>
+C++ implements its standard template library using the <b>std</b>
+namespace. This library provides a number of pre-defined data structures,
+such as vectors and lists. 
+<p>
+Namespaces solve another of C's problems, which is
+that all variable, function, and class names end up in the same global name
+space. This common grouping can create problems when you combine third
+party software from two different vendors, who duplicate one or more names,
+as shown above.
+<p>
+Unfortunately C++'s developers did not create true modules with the
+<tt>namespace</tt> keyword. Unlike Java's packages, 
+C++'s namespaces do not provide
+a way to share implementation among members of the namespace. If ListNode
+and List are declared in the same namespace, they still cannot access one
+another's members without using the <tt>friend</tt> keyword. It would have 
+been nice if they also added the concept
+of package-level access so that one could truly create modules in C++, but
+they didn't. As a result Java has a much more powerful module mechanism than
+C++. 
+<p>
+<hr> 
+<h2> Packages Versus Friends--A Summary</h2>
+<p>
+<ol>
+    <li> Packages in Java provide a way to organize a group of related
+       classes and allow them to seamlessly refer to each other's implementation
+       while protecting their implementation from the prying eyes of outside
+       classes
+<p>
+    <li> Friends provide a less elegant way in C++ to organize a group of
+       related classes and allow them to refer to each other's implementation
+       while protecting their implementation from the prying eyes of outside
+       classes
+<p>
+       <ol>
+       <li> A class declares its variables as protected, and may even declare
+          its constructors as protected if it does not want outside classes
+	  to create instances of the class
+<p>
+       <li> A class can declare that other classes are its friends, which allow
+          the other classes to examine the protected and private instance
+	  variables of the class. Here's an example:
+	 <pre>
+	 class ListNode {
+	    friend class List;
+	    ...
+         };
+	 </pre>
+	 <p>
+       <li> Friendship is not two way: when you declare List to be ListNode's
+           friend, ListNode does not become a friend of List. List must
+	   explicitly declare ListNode to be a friend before the friendship
+	   becomes two way
+       <p>
+	 <li> Subclasses do not inherit a superclass's friendship status. For
+	   example, if you have the following class declaration:
+	   <pre>
+           class DList : public List { ... }
+	   </pre>
+	   then DList is not considered a friend of ListNode.
+	   This restriction is incredibly annoying and really limits
+	   the effectiveness of friends in C++
+	 </ol>
+</ol>
+       The above discussion of the drawbacks of friends should
+       make it clear that Java provides a much cleaner way to group related
+       classes so that they can share their implementation while protecting
+       their implementation from the outside world.

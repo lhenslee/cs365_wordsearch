@@ -1,0 +1,121 @@
+<head>
+<link rel="stylesheet" type="text/css" href="../cs365_notes.css" />
+</head>
+<center>
+<h2>Python Modules and Packages</h2>
+</center>
+<p>
+<hr>
+<ol>
+<li> Overview: Python's module and package mechanism resembles Java's
+  package mechanism. 
+  <p>
+    <ol>
+      <li> A module is a python file that ends with <tt>.py</tt>
+      <li> A package is a directory with a collection of modules or subpackages.
+	<p>
+	  <ol>
+	    <li> The name of the package is the name of the directory. 
+	  </ol>
+      <li> One uses the <tt>import</tt> statement to import a module or
+	package. For example:
+<pre>
+import sys           # import the system defined sys module--you can use the
+                     #   functions in sys as long as you prefix them with sys.
+import foo           # import foo.py. You can use the functions in foo as long as
+                     #   you prefix them with foo.
+from foo import min  # import the min function from foo into the current namespace.
+                     #   You can use min without qualification
+from foo import *    # import all functions from foo into the current namespace.
+                     #   You can use all functions in foo without qualification
+import sounds.effects.echo  # import echo.py from the sounds.effects package
+                            # You can use the functions in echo as long as
+                            # you prefix them with the full package name
+                            # sounds.effects.echo.
+from sounds.effects import echo     # You can use the functions in echo as
+                                    # long as you prefix them with echo (you no
+                                    # longer need the fully qualified package name)
+
+from sounds.effects import *        # assume that effects is a directory. this
+                                    # command does not work like you expect. See the
+                                    # <a href="#packages">packages</a> section below for details
+</pre>
+      </ol>
+<p>
+<li> Modules
+  <p>
+    <ol>
+      <li> When python imports a module, it compiles the file into byte codes
+	and stores the byte codes in a .pyc file. 
+	<p>
+	  <ol>
+	    <li> This .pyc file does not speed up the execution of a program
+	      because the Python interpreter always interprets byte codes
+            <li> The .pyc file speeds up subsequent imports of the module
+	      because the compiler does not need to be invoked a second time
+          </ol>
+      <li> The module search path: Python first searchs for built-in modules
+	and then for modules in directories on the <tt>sys.path</tt> list
+	<p>
+	  <ol> 
+	    <li> By default, the current directory is the first entry on the
+	    sys.path list
+	    <li> The remaining entries are Python libraries defined by the
+	      system-dependent default implementation
+            <li> You can add new directories either to the beginning or end
+	      of the list using standard list operations: If you add the
+	      directories to the beginning of the list, you will mask the 
+	      modules in the Python libraries if the new directories contain
+	      similarly named modules.
+          </ol>
+       <li> The <b>dir</b> command
+	 <ol>
+	   <li> dir(module_name): Returns a list of names in the specified
+	     module
+	   <li> dir(): Returns a list of names in the current
+	     namespace
+         </ol>
+       </ol>
+<p>
+<a name="packages" /a>
+<li> Packages
+  <p>
+    <ol> 
+      <li> __init__.py: Every package directory must have an <tt>__init__.py</tt>
+      file, even if the file is empty (actually no longer true since Python 3.3,
+      but we are using Python 2.7). This file tells Python to treat the
+      directory as a package (otherwise Python treats the directory as an
+      unnamed collection of modules).
+      <p>
+      <li> Importing * from a package: To force Python to import all modules
+	in a package, you must add the module names to the __all__ list in
+	__init__.py. For example, suppose your package structure is:
+<pre>
+silhouette/
+  __init__.py
+  graphics/
+     __init__.py
+     rect.py
+     circle.py
+  events/
+     __init__.py
+     mouse.py
+     keyboard.py
+</pre>
+       If you want the command
+<pre>
+from silhouette.events import *
+</pre>
+       to import <tt>mouse.py</tt> and <tt>keyboard.py</tt>, then the
+       __init__.py file for events should be:
+<pre>
+__all__ = ["mouse", "keyboard"]
+</pre>
+       Even after importing mouse and keyboard, you will still have to
+       access their functions by qualifying them with either mouse or
+       keyboard.
+</ol>
+  
+          
+           
+  

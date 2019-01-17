@@ -1,0 +1,164 @@
+<center> <h1> Java's Inheritance Mechanisms </h1> </center>
+<hr>
+<p>
+<pre>
+I. Inheritance
+
+    A. You create a subclass using the <b>extends</b> keyword
+
+    B. Access Modifiers: more on these later when packages are introduced
+
+        1. public
+	2. protected
+	3. private
+
+    C. Constructors
+
+        1. use <b>super</b> to call the superclass constructor
+	2. super must be the first statement in a constructor
+	3. if super is omitted then the superclass's default 0-argument
+	    constructor is called
+	    a. if the superclass does not provide a 0-argument
+		constructor, then the java compiler will complain
+		
+	4. constructors are called in order of derivation, from superclass
+	    to subclass
+	5. super can be used to access any member of a superclass. It is
+	    commonly used to access the superclass's method when you are
+	    overriding it in the subclass. For example, if you are
+	    overriding a method named "push" and you want to first
+	    call the superclass's implementation of push, you would
+	    write "super.push(...)"
+
+    D. All methods are virtual by default
+
+        1. Use the <b>final</b> keyword to prevent a method from being
+	   overridden
+
+	2. abstract methods with no method body can be created by prefixing
+	    the method name with the <b>abstract</b> keyword
+
+	3. classes that contain abstract methods must be declared abstract
+	    themselves
+
+	    a. subclasses must be declared abstract if they fail to define
+	        an abstract method that they inherit from an abstract 
+		superclass
+
+    E. Object class: Implicit superclass for any class that is not defined
+        to extend another class--all objects can be cast to Object
+
+II. Interfaces
+
+    A. An interface specifies a set of methods that a class agrees to
+       implement. An interface does not provide any implementation for these
+       methods. In fact, an interface can provide no implementation whatsoever.
+       It cannot even declare instance variables (it can only declare constants).
+
+       1. Similar to an abstract class, but different in that it
+		provides no implementation whatsoever, whereas
+		an abstract class may provide implementations for
+		one or more methods
+
+	    a. Note: Interfaces do support default methods that provide
+		a default method body and static methods that provide
+		method bodies. However, these are more advanced concepts
+		that we will not consider in this course.
+
+       2. Classes can choose to implement as many interfaces as they desire
+
+       3. Syntax: <i>access</i> <b>interface</b> {
+                     return-type method-name1(param-list);
+		     return-type method-name2(param-list);
+		     type var1 = value;
+		     type var2 = value;
+		     // ...
+		     return-type method-nameN(param-list);
+		     type varM = value;
+		   }
+
+       Example: <b>public interface</b> Iterator {
+                    boolean hasNext();
+		    Object next();
+		    void remove();
+		}
+ 
+ 	   a. access to an interface is either public or 
+		default (i.e., package)
+	   b. all methods/variables are implicitly declared public,
+		hence you do not need to prefix their declarations
+		(if the interface is declared with package level
+		access, the methods will only be visible to classes
+		within the package, despite their implicit guarantee
+		of publicness).
+	    c. all variables are implicitly declared public, static,
+		and final (i.e,. they are constants shared by all
+		classes that implement the interface)
+
+       4. Interfaces can extend other interfaces
+
+    B. Implementing Interfaces: A class that implements an interface must
+       declare and define each of the interface's methods and must declare
+       those methods public, regardless of whether they are declared public
+       in the interface declaration
+
+       1. Use the <b>implements</b> keyword
+
+       2. Specify multiple interfaces by providing a list of names separated by
+          commas
+
+       3. A class that specifies multiple interfaces is in effect supporting
+	  multiple inheritance. However, since it can only extend one class,
+	  it can only inherit implementation from one class.
+
+    C. Variables can be declared to be of an interface type.
+	1. A variable declared to be of an interface type may only access the
+		methods declared by that interface, even if the variable
+		points to an object that supports additional methods.
+
+    D. Variables in interfaces provide a way of declaring a set of global,
+    	read-only variables that will be used by many of the classes in an 
+	application.
+
+       1. Whenever you would declare a global constant in C++, 
+          place a similar variable into an interface in Java.
+
+       2. Classes that want to reference these global variables will implement
+          the interface
+          
+	  Example: public interface GlobalVariables {
+	             int MIN = 0;
+		     int MAX = 10;
+		     string BADOPERATOR = "Error: Bad Operator";
+		   }
+
+		   public class Node implements GlobalVariables {
+		      int minValue = MIN;
+		      ...
+		   }
+
+III. Types and Inheritance
+    A. Definitions
+        1. Type: A set of values + a set of operations that manipulate those values
+        2. Abstract Type: A type that specifies what its operations
+	   should do, but which provides no implementation of its 
+           operations
+        3. Subtype: A type that permits the same values as another type T,
+           the same operations as T, and provides one or more additional 
+           operations.
+           a. The type T is often called the supertype 
+           b. A subtype can be used whereever its supertype is used, because
+              it supports the same set of operations
+           c. Despite having the prefix sub, a subtype actually provides a
+              superset of T's operations
+    B. Relationship between Types, Classes and Inheritance
+        1. Classes provide a concrete way to declare and implement
+		types
+        2. Interfaces represent abstract types
+	3. Abstract base classes represent abstract types if they
+		provide no default implementations. However, many
+		abstract base classes provide some implementation,
+		and so lie somewhere on the continuum between a
+		concrete type and an abstract type.
+        3. Subclasses represent subtypes of their superclasses.
+</pre>
